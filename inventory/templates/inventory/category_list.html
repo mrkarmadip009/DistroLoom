@@ -1,0 +1,34 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>Business Categories</h2>
+    <a href="{% url 'add_category' %}" class="btn btn-add">+ Add New Category</a>
+</div>
+
+<table style="margin-top: 20px;">
+    <thead>
+        <tr>
+            <th>Category ID</th>
+            <th>Category Name</th>
+            <th>Total Products in this Category</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cat in categories %}
+        <tr>
+            <td>#{{ cat.id }}</td>
+            <td><strong>{{ cat.name }}</strong></td>
+            <td>{{ cat.product_set.count }} items</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No categories found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<br>
+<a href="{% url 'inventory_list' %}">← Back to Inventory</a>
+{% endblock %}

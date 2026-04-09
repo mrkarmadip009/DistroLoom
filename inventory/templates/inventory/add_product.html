@@ -1,0 +1,15 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>Add New Product</h2>
+    <a href="{% url 'add_category' %}" class="btn"
+        style="background: var(--secondary); color: white; font-size: 0.8rem;">+ Create Category First</a>
+</div>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-add">Save to Database</button>
+</form>
+{% endblock %}

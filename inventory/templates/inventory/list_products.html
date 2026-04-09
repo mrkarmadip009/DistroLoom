@@ -1,0 +1,61 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+{% if low_stock %}
+<div style="background: #fff3f3; border-left: 5px solid var(--danger); padding: 15px; margin-bottom: 20px;">
+    <h3 style="color: var(--danger); margin-top: 0;">⚠️ Low Stock Warning</h3>
+    <ul>
+        {% for item in low_stock %}
+        <li>{{ item.name }} is almost out! (Only {{ item.stock_quantity }} left)</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<h2>Current Inventory</h2>
+
+<div style="margin-bottom: 20px; display: flex; gap: 10px;">
+    <input type="text" id="searchInput" placeholder="Search for tobacco, sweets..."
+        style="flex-grow: 1; border: 2px solid var(--primary); padding: 10px; border-radius: 4px;">
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Item Name</th>
+            <th>Category</th>
+            <th>Stock</th>
+            <th>Price</th>
+            <th>Profit/Unit</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td><strong>{{ product.name }}</strong></td>
+            <td><span class="badge">{{ product.get_category_display }}</span></td>
+            <td style="color: {% if product.stock_quantity < 10 %}red{% else %}black{% endif %}; font-weight: bold;">
+                {{ product.stock_quantity }}
+            </td>
+            <td>₹{{ product.selling_price }}</td>
+            <td style="color: green;">₹{{ product.profit_per_item }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No items in stock yet.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            let text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

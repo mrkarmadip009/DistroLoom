@@ -1,0 +1,56 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<h2>New Multi-Product Bill</h2>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
+        <h3>1. Add Items</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_to_cart">
+            <label>Product:</label>
+            <select name="product">
+                {% for p in products %}
+                <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.stock_quantity }})</option>
+                {% endfor %}
+            </select>
+            <label>Quantity:</label>
+            <input type="number" name="quantity" min="1" value="1">
+            <button type="submit" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">+ Add to
+                Bill</button>
+        </form>
+    </div>
+
+    <div style="background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>2. Current Bill Items</h3>
+        <table>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Total</th>
+            </tr>
+            {% for item in cart %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.qty }}</td>
+                <td>₹{{ item.total }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h3 style="text-align: right;">Grand Total: ₹{{ cart_total }}</h3>
+
+        <form method="POST" style="margin-top: 20px; border-top: 2px solid #eee; pt: 10px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="finalize_bill">
+            <label>Customer Name:</label>
+            <input type="text" name="customer" required placeholder="Shopkeeper Name">
+            <button type="submit" class="btn btn-add" style="width: 100%; margin-top: 10px;">✅ Finalize & Save
+                Bill</button>
+            <button type="submit" name="action" value="clear"
+                style="background: none; border: none; color: red; cursor: pointer; margin-top: 10px;">Clear
+                List</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
