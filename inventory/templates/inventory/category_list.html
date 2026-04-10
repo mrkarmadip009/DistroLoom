@@ -1,34 +1,37 @@
 {% extends 'inventory/base.html' %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center;">
-    <h2>Business Categories</h2>
-    <a href="{% url 'add_category' %}" class="btn btn-add">+ Add New Category</a>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.5rem"
+    class="header-flex">
+    <div style="display:flex;align-items:center;gap:.75rem">
+        <div class="icon-box">📂</div>
+        <h2 style="font-size:1.25rem;font-weight:700">Business Categories</h2>
+    </div>
+    <a href="{% url 'add_category' %}" class="btn-primary" style="font-size:.75rem;padding:.5rem 1rem; width:auto;">➕
+        Add New Category</a>
 </div>
 
-<table style="margin-top: 20px;">
-    <thead>
-        <tr>
-            <th>Category ID</th>
-            <th>Category Name</th>
-            <th>Total Products in this Category</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for cat in categories %}
-        <tr>
-            <td>#{{ cat.id }}</td>
-            <td><strong>{{ cat.name }}</strong></td>
-            <td>{{ cat.product_set.count }} items</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3">No categories found.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<br>
-<a href="{% url 'inventory_list' %}">← Back to Inventory</a>
+<div style="overflow-x:auto;border-radius:.75rem;border:1px solid #e5e7eb">
+    <table>
+        <thead>
+            <tr>
+                <th>Category Name</th>
+                <th>Total Products</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td style="font-weight:600">{{ category.name }}</td>
+                <td><span class="badge">{{ category.product_set.count }} items</span></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2">No categories found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<a href="{% url 'inventory_list' %}" class="back-link">← Back to Inventory</a>
 {% endblock %}

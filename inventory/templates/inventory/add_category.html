@@ -1,21 +1,27 @@
 {% extends 'inventory/base.html' %}
 
+{% block title %}Add Category - DistroLoom{% endblock %}
+
 {% block content %}
-<div style="max-width: 400px; margin: auto;">
-    <h2>Add New Business Category</h2>
-    <p style="color: #666;">Example: Tobacco, Sweets, Peanuts, etc.</p>
-
-    <form method="POST"
-        style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        {% csrf_token %}
-        <div style="margin-bottom: 15px;">
-            <label>Category Name:</label>
-            <input type="text" name="category_name" required style="width: 100%; padding: 10px; margin-top: 5px;">
+<div style="display:flex;justify-content:center">
+    <div style="width:100%;max-width:28rem">
+        <div style="margin-bottom:1.5rem">
+            <div class="icon-box icon-box-lg" style="margin-bottom:1rem">📁</div>
+            <h2 style="font-size:1.5rem;font-weight:700">Add New Business Category</h2>
+            <p style="color:#6b7280;margin-top:.25rem;font-size:.875rem">Example: Tobacco, Sweets, Peanuts, etc.</p>
         </div>
-        <button type="submit" class="btn btn-add" style="width: 100%;">Save Category</button>
-    </form>
 
-    <br>
-    <a href="{% url 'add_product' %}" style="text-decoration: none; color: var(--primary);">← Back to Product Form</a>
+        <form class="form-card" method="POST" action="{% url 'add_category' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Category Name</label>
+                <input name="category_name" type="text" required placeholder="Enter category name..."
+                    class="form-input">
+            </div>  
+            <button type="submit" class="btn-primary">Save Category</button>
+        </form>
+
+        <a href="{% url 'add_product' %}" class="back-link">← Back to Product Form</a>
+    </div>
 </div>
 {% endblock %}

@@ -1,15 +1,72 @@
 {% extends 'inventory/base.html' %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center;">
-    <h2>Add New Product</h2>
-    <a href="{% url 'add_category' %}" class="btn"
-        style="background: var(--secondary); color: white; font-size: 0.8rem;">+ Create Category First</a>
+<div style="max-width: 550px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div class="icon-box" style="width: 50px; height: 50px; margin: 0 auto 1rem;">➕</div>
+        <h2 style="font-weight: 800;">Add / Update Stock</h2>
+        <p style="color: #6b7280; font-size: 0.9rem;">Create new items or update existing inventory</p>
+    </div>
+
+    <div class="form-card"
+        style="padding: 1.5rem; margin-bottom: 1.5rem; border: 1px dashed #5b4cdb50; border-radius: 1rem; background: #5b4cdb08;">
+        <h3 style="font-size: 0.85rem; text-transform: uppercase; color: #5b4cdb; margin-bottom: 1rem;">Search Existing
+            Products</h3>
+        <select id="product-selector" class="form-input" style="border-color: #5b4cdb50;">
+            <option value="">-- Start Typing to Find Product --</option>
+            {% for p in products %}
+            <option value="{{ p.id }}" data-name="{{ p.name }}" data-category="{{ p.category.id }}"
+                data-stock="{{ p.stock_quantity }}" data-buying="{{ p.buying_price }}"
+                data-selling="{{ p.selling_price }}">
+                {{ p.name }} (Current Stock: {{ p.stock_quantity }})
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <form method="POST" class="form-card" style="padding: 1.5rem; border: 1px solid #eee; border-radius: 1rem;">
+        {% csrf_token %}
+        <h3 style="font-size: 0.85rem; text-transform: uppercase; margin-bottom: 1rem;">Product Details</h3>
+
+        {{ form.as_p }}
+
+        <button type="submit" class="btn-save">🚀 Save to Inventory</button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem;">
+        <a href="{% url 'inventory_list' %}" class="back-link">← Back to Dashboard</a>
+    </div>
 </div>
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-add">Save to Database</button>
-</form>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#product-selector').change(function () {
+            // Find the selected option
+            var selected = $(this).find('option:selected');
+
+            if (selected.val()) {
+                // Fill the Django form inputs with selected data
+                $('#id_name').val(selected.data('name'));
+                $('#id_category').val(selected.data('category'));
+
+                // For stock, we assume you're *adding* to the total, not just setting it
+                var currentStock = selected.data('stock');
+                $('#id_stock_quantity').val(currentStock).focus(); // Highlight stock input
+
+                // Set prices, allows you to change them if needed
+                $('#id_buying_price').val(selected.data('buying'));
+                $('#id_selling_price').val(selected.data('selling'));
+            } else {
+                // Clear form if no product is selected (create mode)
+                $('#id_name').val('');
+                $('#id_category').val('');
+                $('#id_stock_quantity').val('0');
+                $('#id_buying_price').val('');
+                $('#id_selling_price').val('');
+            }
+        });
+    });
+</script>
 {% endblock %}

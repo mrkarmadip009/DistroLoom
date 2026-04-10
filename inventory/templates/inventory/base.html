@@ -1,139 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DistroLoom | Business Manager</title>
-    
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>{% block title %}DistroLoom{% endblock %}</title>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        :root {
-            --primary: #2c3e50;
-            --secondary: #34495e;
-            --accent: #27ae60;
-            --danger: #e74c3c;
-            --light: #f4f7f6;
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light);
-            margin: 0;
-            color: #333;
+            font-family: 'DM Sans', sans-serif;
+            background: #f2f3f7;
+            color: #181c24;
         }
 
-        /* Nav Bar - Sticky so it stays at the top */
-        nav {
-            background: var(--primary);
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Navbar */
+        .navbar {
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: 50;
+            background: #181c24;
+            color: #f2f3f7;
+            box-shadow: 0 2px 12px rgba(24, 28, 36, 0.15);
         }
 
-        .container {
-            max-width: 1000px; /* Made slightly wider for better tables */
-            margin: 2rem auto;
-            background: white;
+        .nav-inner {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .4rem .75rem;
+            border-radius: .5rem;
+            font-size: .875rem;
+            font-weight: 500;
+            color: rgba(242, 243, 247, 0.6);
+            transition: all .2s;
+        }
+
+        .nav-link:hover {
+            color: #f2f3f7;
+            background: rgba(242, 243, 247, 0.1);
+        }
+
+        .nav-btn {
+            margin-left: .75rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .5rem 1rem;
+            border-radius: .75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: .875rem;
+            font-weight: 600;
+            border: none;
+            transition: all .2s;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            opacity: 0.9;
+            box-shadow: 0 4px 12px rgba(91, 76, 219, 0.3);
+        }
+
+        /* Main Container */
+        .main-wrap {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .main-card {
+            background: #fff;
+            border-radius: 1rem;
             padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            min-height: 80vh;
+            box-shadow: 0 1px 3px rgba(24, 28, 36, 0.04), 0 8px 24px rgba(24, 28, 36, 0.06);
+            border: 1px solid rgba(220, 222, 230, 0.6);
+            min-height: 70vh;
         }
 
-        h2 {
-            color: var(--primary);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 10px;
-        }
-
-        /* Table Styling */
+        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
         }
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
         th {
-            background: var(--secondary);
-            color: white;
+            background: #181c24;
+            color: #f2f3f7;
+            text-align: left;
+            padding: .75rem;
         }
 
-        tr:hover {
-            background: #f9f9f9;
+        td {
+            padding: .75rem;
+            border-bottom: 1px solid #e5e7eb;
         }
 
-        /* Form & Button Styling */
-        form p { margin-bottom: 15px; }
+        /* 2. "Wonderful" Form Styling */
+        .form-card p {
+            margin-bottom: 1.25rem;
+        }
 
-        input, select {
+        .form-card label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #181c24;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .form-card input,
+        .form-card select,
+        .form-card textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+            padding: 0.8rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #dcdee6;
+            background: #f8f9fa;
+            color: #181c24;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            outline: none;
+            font-family: inherit;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
+        .form-card input:focus,
+        .form-card select:focus {
+            border-color: #5b4cdb;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.1);
         }
 
-        .btn-add { background: var(--accent); color: white; }
-        .btn-add:hover { background: #219150; }
-
+        /* Reusable Components */
         .badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            background: #eee;
+            background: #ededf9;
+            color: #5b4cdb;
+            padding: .2rem .5rem;
+            border-radius: 10px;
+            font-size: .75rem;
+        }
+
+        .product-chip {
+            background: #5b4cdb15;
+            color: #5b4cdb;
+            border: 1px solid #5b4cdb30;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 5px;
+        }
+
+        .btn-primary,
+        .btn-save {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: .75rem 1rem;
+            border-radius: .75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: .875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            /* For full width in forms */
+        }
+
+        .btn-primary:hover,
+        .btn-save:hover {
+            opacity: .9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(91, 76, 219, 0.3);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #6b7280;
+            font-size: .875rem;
+        }
+
+        /* 3. Printing/PDF Utility */
+        @media print {
+
+            .navbar,
+            .nav-btn,
+            .footer,
+            .no-print {
+                display: none !important;
+            }
+
+            .main-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
         }
     </style>
 </head>
 
 <body>
-    <nav>
-        <div style="font-size: 1.5rem; font-weight: bold;">
-            <a href="{% url 'inventory_list' %}" style="color: white; text-decoration: none;">📦 DistroLoom</a>
-        </div>
-        <div>
-            <a href="{% url 'inventory_list' %}" style="color: white; text-decoration: none; margin-right: 15px;">Inventory</a>
-            
-            <a href="{% url 'category_list' %}" style="color: white; text-decoration: none; margin-right: 15px;">Categories</a>
-            
-            <a href="{% url 'sales_history' %}" style="color: white; text-decoration: none; margin-right: 15px;">History</a>
-
-            <a href="{% url 'add_product' %}" style="color: white; text-decoration: none; margin-right: 15px;">+ Add Stock</a>
-
-            <a href="{% url 'create_bill' %}" style="color: #27ae60; background: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold;">📝 Create Bill</a>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="{% url 'inventory_list' %}" class="nav-logo">📦 DistroLoom</a>
+            <div class="nav-links">
+                <a href="{% url 'inventory_list' %}" class="nav-link">📦 Inventory</a>
+                <a href="{% url 'category_list' %}" class="nav-link">📂 Categories</a>
+                <a href="{% url 'sales_history' %}" class="nav-link">📜 History</a>
+                <a href="{% url 'add_product' %}" class="nav-link">➕ + Add Stock</a>
+                <a href="{% url 'create_bill' %}" class="nav-btn">📄 Create Bill</a>
+            </div>
         </div>
     </nav>
-
-    <div class="container">
-        {% block content %}
-        {% endblock %}
+    <div class="main-wrap">
+        <div class="main-card">
+            {% block content %}{% endblock %}
+        </div>
     </div>
-
-    <footer style="text-align: center; padding: 20px; color: #7f8c8d; font-size: 0.9rem;">
-        <p>&copy; 2026 DistroLoom Business Suite</p>
-    </footer>
+    <footer class="footer">© 2026 DistroLoom Business Suite</footer>
 </body>
+
 </html>

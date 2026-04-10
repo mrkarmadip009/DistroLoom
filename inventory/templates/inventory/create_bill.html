@@ -1,55 +1,77 @@
 {% extends 'inventory/base.html' %}
 
 {% block content %}
-<h2>New Multi-Product Bill</h2>
+<div style="display:flex; align-items:center; gap:.75rem; margin-bottom:1.5rem;">
+    <div class="icon-box">🛒</div>
+    <h2 style="font-size:1.25rem; font-weight:700;">Create New Bill</h2>
+</div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-    <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
-        <h3>1. Add Items</h3>
-        <form method="POST">
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <div class="form-card" style="padding: 1.5rem;">
+        <h3 style="font-size:1rem; margin-bottom:1.5rem; color:#5b4cdb;">1. Add Items</h3>
+        <form method="POST" action="{% url 'create_bill' %}">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_to_cart">
-            <label>Product:</label>
-            <select name="product">
-                {% for p in products %}
-                <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.stock_quantity }})</option>
-                {% endfor %}
-            </select>
-            <label>Quantity:</label>
-            <input type="number" name="quantity" min="1" value="1">
-            <button type="submit" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">+ Add to
-                Bill</button>
+
+            <div class="form-group">
+                <label class="form-label">Select Product</label>
+                <select name="product" class="form-input">
+                    {% for p in products %}
+                    <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.stock_quantity }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" name="quantity" value="1" min="1" class="form-input">
+            </div>
+
+            <button type="submit" class="btn-primary" style="width:100%;">➕ Add to Cart</button>
         </form>
     </div>
 
-    <div style="background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h3>2. Current Bill Items</h3>
-        <table>
-            <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Total</th>
-            </tr>
-            {% for item in cart %}
-            <tr>
-                <td>{{ item.name }}</td>
-                <td>{{ item.qty }}</td>
-                <td>₹{{ item.total }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-        <h3 style="text-align: right;">Grand Total: ₹{{ cart_total }}</h3>
+    <div class="form-card" style="padding: 1.5rem;">
+        <h3 style="font-size:1rem; margin-bottom:1.5rem; color:#5b4cdb;">2. Your Cart</h3>
 
-        <form method="POST" style="margin-top: 20px; border-top: 2px solid #eee; pt: 10px;">
+        <div style="min-height: 150px;">
+            {% if not cart %}
+            <p style="text-align:center; color:#6b7280; margin-top:3rem;">Your cart is empty.</p>
+            {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th style="text-align:center;">Qty</th>
+                        <th style="text-align:right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td style="text-align:center;">{{ item.qty }}</td>
+                        <td style="text-align:right;">₹{{ item.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <h4 style="text-align:right; margin-top:1.5rem; font-size:1.1rem;">Grand Total: ₹{{ cart_total }}</h4>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="{% url 'create_bill' %}"
+            style="margin-top:2rem; border-top: 1px solid #eee; padding-top: 1.5rem;">
             {% csrf_token %}
             <input type="hidden" name="action" value="finalize_bill">
-            <label>Customer Name:</label>
-            <input type="text" name="customer" required placeholder="Shopkeeper Name">
-            <button type="submit" class="btn btn-add" style="width: 100%; margin-top: 10px;">✅ Finalize & Save
+
+            <div class="form-group">
+                <label class="form-label">Customer Name</label>
+                <input type="text" name="customer" required placeholder="Enter shopkeeper name" class="form-input">
+            </div>
+
+            <button type="submit" class="btn-primary" style="width:100%; background:#181c24;">✅ Save & Print
                 Bill</button>
-            <button type="submit" name="action" value="clear"
-                style="background: none; border: none; color: red; cursor: pointer; margin-top: 10px;">Clear
-                List</button>
         </form>
     </div>
 </div>

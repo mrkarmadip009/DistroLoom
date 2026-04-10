@@ -1,66 +1,513 @@
-{% extends 'inventory/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block content %}
-<div id="bill-container">
-    <div id="bill"
-        style="border: 2px solid #333; padding: 30px; max-width: 500px; margin: 30px auto; background: #fff; font-family: 'Courier New', Courier, monospace;">
-        <h1 style="text-align: center; color: #2c3e50; margin-bottom: 5px;">DISTROLOOM</h1>
-        <p style="text-align: center; margin-top: 0; font-size: 0.9rem;">Official Business Invoice</p>
-        <hr style="border: 1px dashed #ccc;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Bill Invoice - DistroLoom</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-        <div style="margin: 20px 0;">
-            <p><strong>Customer:</strong> {{ sale.customer_name }}</p>
-            <p><strong>Date:</strong> {{ sale.sale_date|date:"D, d M Y" }}</p>
-            <p><strong>Bill No:</strong> #DL-00{{ sale.id }}</p>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f2f3f7;
+            color: #181c24;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: #181c24;
+            color: #f2f3f7;
+            box-shadow: 0 2px 12px rgba(24, 28, 36, 0.15);
+        }
+
+        .nav-inner {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+            cursor: pointer;
+        }
+
+        .nav-logo:hover {
+            opacity: .8;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .4rem .75rem;
+            border-radius: .5rem;
+            font-size: .875rem;
+            font-weight: 500;
+            color: rgba(242, 243, 247, 0.6);
+            transition: all .2s;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .nav-link:hover {
+            color: #f2f3f7;
+            background: rgba(242, 243, 247, 0.1);
+        }
+
+        .nav-link.active {
+            color: #f2f3f7;
+            background: rgba(242, 243, 247, 0.15);
+        }
+
+        .nav-btn {
+            margin-left: .75rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .5rem 1rem;
+            border-radius: .75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: .875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .nav-btn:hover {
+            opacity: .9;
+            box-shadow: 0 4px 16px rgba(91, 76, 219, 0.35);
+        }
+
+        /* Main */
+        .main-wrap {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .main-card {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(24, 28, 36, 0.04), 0 8px 24px rgba(24, 28, 36, 0.06);
+            border: 1px solid rgba(220, 222, 230, 0.6);
+            min-height: 70vh;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #6b7280;
+            font-size: .875rem;
+        }
+
+        /* Common */
+        .icon-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: .75rem;
+            background: #ededf9;
+            color: #5b4cdb;
+        }
+
+        .icon-box-lg {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 1rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: .15rem .65rem;
+            border-radius: 9999px;
+            font-size: .75rem;
+            font-weight: 500;
+            background: #ededf9;
+            color: #5b4cdb;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .65rem 1rem;
+            border-radius: .75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: .875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn-primary:hover {
+            opacity: .9;
+            box-shadow: 0 4px 16px rgba(91, 76, 219, 0.35);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .65rem 1rem;
+            border-radius: .75rem;
+            background: #f2f3f7;
+            color: #181c24;
+            font-size: .875rem;
+            font-weight: 600;
+            border: 1px solid #dcdee6;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e9f0;
+        }
+
+        .btn-muted {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .65rem 1rem;
+            border-radius: .75rem;
+            background: #f2f3f7;
+            color: #6b7280;
+            font-size: .875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            margin-top: 1.25rem;
+            font-size: .875rem;
+            font-weight: 500;
+            color: #5b4cdb;
+            cursor: pointer;
+        }
+
+        .back-link:hover {
+            color: #4a3cc0;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .875rem;
+        }
+
+        thead tr {
+            background: #181c24;
+            color: #f2f3f7;
+        }
+
+        th {
+            text-align: left;
+            padding: .75rem;
+            font-weight: 600;
+        }
+
+        td {
+            padding: .75rem;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: rgba(242, 243, 247, 0.5);
+        }
+
+        /* Forms */
+        .form-card {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(24, 28, 36, 0.04), 0 8px 24px rgba(24, 28, 36, 0.06);
+            border: 1px solid rgba(220, 222, 230, 0.6);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .875rem;
+            font-weight: 500;
+            color: #181c24;
+            margin-bottom: .5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: .75rem 1rem;
+            border-radius: .75rem;
+            border: 1px solid #dcdee6;
+            background: #f2f3f7;
+            color: #181c24;
+            font-size: .875rem;
+            outline: none;
+            transition: all .2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .form-input:focus {
+            border-color: #5b4cdb;
+            box-shadow: 0 0 0 3px rgba(91, 76, 219, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        textarea.form-input {
+            resize: none;
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+            padding: .75rem;
+        }
+
+        /* Warning */
+        .warning-box {
+            margin-bottom: 1.5rem;
+            border-radius: .75rem;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+            padding: 1rem;
+        }
+
+        .warning-title {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .875rem;
+            font-weight: 700;
+            color: #ef4444;
+            margin-bottom: .5rem;
+        }
+
+        /* Search */
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .75rem 1rem;
+            border-radius: .75rem;
+            border: 1px solid #dcdee6;
+            background: #f2f3f7;
+            transition: all .2s;
+            margin-bottom: 1.25rem;
+        }
+
+        .search-box:focus-within {
+            border-color: #5b4cdb;
+            box-shadow: 0 0 0 3px rgba(91, 76, 219, 0.1);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: .875rem;
+            color: #181c24;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* Tip box */
+        .tip-box {
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            border-radius: .75rem;
+            background: rgba(237, 237, 249, 0.5);
+            border: 1px solid rgba(91, 76, 219, 0.1);
+            padding: 1rem;
+        }
+
+        /* Bill */
+        .bill-section {
+            background: rgba(242, 243, 247, 0.5);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(220, 222, 230, 0.6);
+        }
+
+        /* Responsive */
+        @media(max-width:768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .bill-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .header-flex {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: .75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="inventory.html" class="nav-logo">📦 DistroLoom</a>
+            <div class="nav-links">
+                <a href="inventory.html" class="nav-link">📦 Inventory</a>
+                <a href="categories.html" class="nav-link">📂 Categories</a>
+                <a href="history.html" class="nav-link">📜 History</a>
+                <a href="add_product.html" class="nav-link">➕ + Add Stock</a>
+
+                <a href="create_bill.html" class="nav-btn">📄 Create Bill</a>
+            </div>
         </div>
+    </nav>
+    <div class="main-wrap">
+        <div class="main-card">
 
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr style="background: #34495e; color: white;">
-                <th style="padding: 10px;">Item</th>
-                <th>Qty</th>
-                <th style="text-align: right; padding-right: 10px;">Total</th>
-            </tr>
-            {% for item in sale.items.all %}
-            <tr>
-                <td style="padding: 10px;">{{ item.product.name }}</td>
-                <td>{{ item.quantity }}</td>
-                <td style="text-align: right; padding-right: 10px;">₹{% widthratio item.quantity 1 item.price_at_sale %}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-        <h2 style="text-align: right;">Total: ₹{{ sale.total_amount }}</h2>
+            <div style="max-width:40rem;margin:0 auto">
+                <div id="bill"
+                    style="background:#fff;border:2px solid rgba(24,28,36,0.8);padding:2.5rem;font-family:'Courier New',Courier,monospace">
+                    <h1
+                        style="text-align:center;font-size:1.5rem;font-weight:700;letter-spacing:.15em;margin-bottom:.25rem">
+                        DISTROLOOM</h1>
+                    <p style="text-align:center;color:#6b7280;font-size:.875rem;margin-bottom:1rem">Official Business
+                        Invoice</p>
+                    <hr style="border:none;border-top:1px dashed #e5e7eb;margin-bottom:1.5rem">
+                    <div style="font-size:.875rem;margin-bottom:1.5rem;line-height:1.8">
+                        <p><strong>Customer:</strong> Rahul Sharma</p>
+                        <p><strong>Date:</strong> Wed, 09 Apr 2026</p>
+                        <p><strong>Bill No:</strong> #DL-00142</p>
+                    </div>
+                    <table style="width:100%;font-size:.875rem">
+                        <thead>
+                            <tr style="background:#181c24;color:#f2f3f7">
+                                <th style="text-align:left;padding:.75rem">Item</th>
+                                <th style="text-align:center;padding:.75rem">Qty</th>
+                                <th style="text-align:right;padding:.75rem">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid #e5e7eb">
+                                <td style="padding:.75rem">Gold Flake Kings</td>
+                                <td style="text-align:center;padding:.75rem">10</td>
+                                <td style="text-align:right;padding:.75rem">₹1,500</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #e5e7eb">
+                                <td style="padding:.75rem">Dairy Milk Silk</td>
+                                <td style="text-align:center;padding:.75rem">5</td>
+                                <td style="text-align:right;padding:.75rem">₹475</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #e5e7eb">
+                                <td style="padding:.75rem">Haldiram Peanuts</td>
+                                <td style="text-align:center;padding:.75rem">8</td>
+                                <td style="text-align:right;padding:.75rem">₹320</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:.75rem">Red Bull 250ml</td>
+                                <td style="text-align:center;padding:.75rem">3</td>
+                                <td style="text-align:right;padding:.75rem">₹375</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="text-align:right;margin-top:1rem;margin-bottom:.5rem">
+                        <p style="font-size:1.125rem;font-weight:700">Total: ₹2,670</p>
+                    </div>
+                    <div style="border-top:2px solid #181c24;padding-top:.75rem;text-align:right">
+                        <p style="font-size:1.25rem;font-weight:700">Grand Total: ₹2,670</p>
+                    </div>
+                    <div style="margin-top:2.5rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;text-align:center">
+                        <p style="font-size:.75rem;color:#6b7280">Thank you for your business, Rahul Sharma!</p>
+                        <p style="font-size:.65rem;color:rgba(107,114,128,0.6);margin-top:.25rem">Generated by
+                            Karmadip's DistroLoom</p>
+                    </div>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-top:2rem">
+                    <button onclick="window.print()" class="btn-primary">🖨 Print Invoice</button>
+                    <button class="btn-secondary">⬇ Download PDF</button>
+                    <button class="btn-muted">✅ Done</button>
+                </div>
+            </div>
 
-        <div style="text-align: right; border-top: 2px solid #333; padding-top: 10px;">
-            <h2 style="margin: 0;">Grand Total: ₹{{ sale.total_bill }}</h2>
-        </div>
-
-        <div style="margin-top: 40px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
-            <p style="font-size: 0.8rem; color: #666;">Thank you for your business, {{ sale.customer_name }}!</p>
-            <p style="font-size: 0.7rem;">Generated by Karmadip's DistroLoom</p>
         </div>
     </div>
-</div>
+    <footer class="footer">© 2026 DistroLoom Business Suite</footer>
+</body>
 
-<div style="text-align: center; margin-bottom: 50px;">
-    <button onclick="downloadPDF()" class="btn" style="background: #e67e22; color: white; margin-right: 10px;">📥
-        Download PDF</button>
-    <button onclick="window.print()" class="btn btn-add" style="margin-right: 10px;">🖨️ Print Invoice</button>
-    <a href="{% url 'inventory_list' %}" class="btn"
-        style="background: #95a5a6; color: white; text-decoration: none;">Done</a>
-</div>
-
-<script>
-    function downloadPDF() {
-        const element = document.getElementById('bill'); // The ID of your bill div
-        const options = {
-            margin: 10,
-            filename: 'Bill_{{ sale.customer_name }}_{{ sale.id }}.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(options).from(element).save();
-    }
-</script>
-{% endblock %}
+</html>
