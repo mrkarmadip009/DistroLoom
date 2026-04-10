@@ -1,37 +1,53 @@
 {% extends 'inventory/base.html' %}
 
 {% block content %}
-<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.5rem"
-    class="header-flex">
-    <div style="display:flex;align-items:center;gap:.75rem">
-        <div class="icon-box">📂</div>
-        <h2 style="font-size:1.25rem;font-weight:700">Business Categories</h2>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div style="display:flex; align-items:center; gap:.75rem;">
+        <div class="icon-box" style="font-size: 1.5rem;">📂</div>
+        <h2 style="font-size:1.25rem; font-weight:700;">Product Categories</h2>
     </div>
-    <a href="{% url 'add_category' %}" class="btn-primary" style="font-size:.75rem;padding:.5rem 1rem; width:auto;">➕
-        Add New Category</a>
+
+    <a href="{% url 'add_category' %}" class="btn-primary"
+        style="width: auto; padding: 10px 20px; text-decoration: none;">
+        ➕ Add New Category
+    </a>
 </div>
 
-<div style="overflow-x:auto;border-radius:.75rem;border:1px solid #e5e7eb">
+<div style="overflow-x:auto; border-radius:.75rem; border:1px solid #e5e7eb; background: #fff;">
     <table>
         <thead>
             <tr>
-                <th>Category Name</th>
-                <th>Total Products</th>
+                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: left;">Category Name</th>
+                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: center;">Total Products</th>
+                {% if user.is_superuser %}
+                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: center;">Actions</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
             {% for category in categories %}
-            <tr>
-                <td style="font-weight:600">{{ category.name }}</td>
-                <td><span class="badge">{{ category.product_set.count }} items</span></td>
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding: 1rem;"><strong>{{ category.name }}</strong></td>
+                <td style="padding: 1rem; text-align: center;">
+                    <span class="badge">{{ category.product_set.count }} Items</span>
+                </td>
+
+                {% if user.is_superuser %}
+                <td style="padding: 1rem; text-align: center;">
+                    <a href="{% url 'delete_category' category.pk %}"
+                        onclick="return confirm('Karmadip, deleting this category might affect items inside it. Continue?')"
+                        style="color: #ef4444; text-decoration: none; font-size: 1.2rem;">
+                        🗑️
+                    </a>
+                </td>
+                {% endif %}
             </tr>
             {% empty %}
             <tr>
-                <td colspan="2">No categories found.</td>
+                <td colspan="3" style="padding: 3rem; text-align: center; color: #6b7280;">No categories found.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-<a href="{% url 'inventory_list' %}" class="back-link">← Back to Inventory</a>
 {% endblock %}

@@ -50,6 +50,36 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def delete_product(request, pk):
+    # Only allow the Boss (Superuser) to delete records
+    if not request.user.is_superuser:
+        return redirect('inventory_list')
+        
+    product = get_object_or_404(Product, pk=pk)
+    product.delete()
+    return redirect('inventory_list')
+
+@login_required
+def delete_category(request, pk):
+    if not request.user.is_superuser:
+        return redirect('category_list')
+    category = get_object_or_404(Category, pk=pk)
+    category.delete()
+    return redirect('category_list')
+
+@login_required
+def delete_sale(request, pk):
+    if not request.user.is_superuser:
+        return redirect('sales_history')
+    sale = get_object_or_404(Sale, pk=pk)
+    sale.delete()
+    return redirect('sales_history')
+
 def inventory_list(request):
     products = Product.objects.all()
     low_stock = Product.objects.filter(stock_quantity__lt=10)

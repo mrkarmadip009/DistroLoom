@@ -3,18 +3,19 @@
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <div style="display:flex; align-items:center; gap:.75rem;">
-        <div class="icon-box">📦</div>
+        <div class="icon-box" style="font-size: 1.5rem;">📦</div>
         <h2 style="font-size:1.25rem; font-weight:700;">Current Inventory Details</h2>
     </div>
 
     {% if user.is_superuser %}
     <a href="{% url 'financial_report' %}" class="btn-primary"
-        style="background: #181c24; width: auto; font-size: 0.8rem; text-decoration: none; padding: 10px 20px; display: inline-flex; align-items: center;">
+        style="background: #181c24; width: auto; font-size: 0.8rem; text-decoration: none; padding: 10px 20px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px;">
         📊 View Financial Report
     </a>
     {% else %}
-    <div style="font-size: 0.75rem; color: #6b7280; background: #f8f9fa; padding: 0.5rem; border-radius: 0.5rem;">
-        🔒 Admin Login Required for Reports
+    <div
+        style="font-size: 0.75rem; color: #6b7280; background: #f8f9fa; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+        🔒 Admin Login Required for Profit Data
     </div>
     {% endif %}
 </div>
@@ -25,26 +26,47 @@
         style="flex:1; border:none; outline:none; font-size:.875rem; font-family:inherit;">
 </div>
 
-<div style="overflow-x:auto; border-radius:.75rem; border:1px solid #e5e7eb">
+<div style="overflow-x:auto; border-radius:.75rem; border:1px solid #e5e7eb; background: #fff;">
     <table id="inventoryTable">
         <thead>
             <tr>
-                <th>Item Name</th>
-                <th>Category</th>
-                <th style="text-align:center;">Current Stock</th>
-                <th style="text-align:right">Selling Price</th>
+                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: left;">Item Name</th>
+                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: left;">Category</th>
+                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: center;">Stock</th>
+                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: right;">Selling Price</th>
+                {% if user.is_superuser %}
+                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: center;">Actions</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
             {% for product in products %}
-            <tr>
-                <td><strong>{{ product.name }}</strong></td>
-                <td><span class="badge">{{ product.category.name }}</span></td>
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding: 1rem;"><strong>{{ product.name }}</strong></td>
+                <td style="padding: 1rem;"><span class="badge">{{ product.category.name }}</span></td>
                 <td
-                    style="text-align:center; {% if product.stock_quantity < 10 %}color:#ef4444; font-weight:700;{% endif %}">
+                    style="padding: 1rem; text-align: center; {% if product.stock_quantity < 10 %}color:#ef4444; font-weight:700;{% endif %}">
                     {{ product.stock_quantity }}
                 </td>
-                <td style="text-align:right">₹{{ product.selling_price }}</td>
+                <td style="padding: 1rem; text-align: right; font-weight: 600;">₹{{ product.selling_price }}</td>
+
+                {% if user.is_superuser %}
+                <td style="padding: 1rem; text-align: center;">
+                    <a href="{% url 'delete_product' product.pk %}"
+                        onclick="return confirm('Karmadip, are you sure you want to delete {{ product.name }}? This cannot be undone.')"
+                        style="color: #ef4444; text-decoration: none; font-size: 1.2rem; transition: transform 0.2s; display: inline-block;"
+                        onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+                        🗑️
+                    </a>
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 3rem; text-align: center; color: #6b7280;">
+                    No products found in inventory. <a href="{% url 'add_product' %}" style="color: #5b4cdb;">Add one
+                        now?</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -52,14 +74,34 @@
 </div>
 
 <script>
-    // Live Search Logic
+    // Live Search Logic: Filters the table as you type
     document.getElementById('inventorySearch').addEventListener('keyup', function () {
         let filter = this.value.toLowerCase();
         let rows = document.querySelectorAll('#inventoryTable tbody tr');
+
         rows.forEach(row => {
-            let text = row.innerText.toLowerCase();
-            row.style.display = text.includes(filter) ? '' : 'none';
+            // Only search if the row isn't the "Empty" message
+            if (row.cells.length > 1) {
+                let text = row.innerText.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            }
         });
     });
 </script>
+
+<style>
+    tbody tr:hover {
+        background-color: #fcfcfd !important;
+    }
+
+    .badge {
+        background: #5b4cdb15;
+        color: #5b4cdb;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+</style>
 {% endblock %}

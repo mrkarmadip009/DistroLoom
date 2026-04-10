@@ -6,7 +6,7 @@
         <div class="icon-box">📜</div>
         <h2 style="font-size:1.25rem; font-weight:700;">Sales History</h2>
     </div>
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:10px;" class="no-print">
         <button onclick="window.print()" class="nav-btn" style="background:#22863a; width: auto; cursor: pointer;">🖨️
             Print Page</button>
         <a href="{% url 'create_bill' %}" class="nav-btn" style="width: auto;">➕ Create New Bill</a>
@@ -21,7 +21,7 @@
                 <th>Customer</th>
                 <th>Products Sold</th>
                 <th style="text-align:right">Total Bill</th>
-                <th class="no-print">Actions</th>
+                <th class="no-print" style="text-align:center;">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -35,12 +35,23 @@
                     {% endfor %}
                 </td>
                 <td style="text-align:right; font-weight:700; color:#22863a;">₹{{ sale.total_amount }}</td>
-                <td class="no-print">
-                    <button
-                        onclick="generateInvoice('{{ sale.id }}', '{{ sale.customer_name }}', '{{ sale.sale_date|date:'d M Y' }}', '{{ sale.total_amount }}')"
-                        style="color: #5b4cdb; background: none; border: none; cursor: pointer; font-weight: 600;">
-                        📄 PDF
-                    </button>
+
+                <td class="no-print" style="text-align:center; min-width: 120px;">
+                    <div style="display: flex; gap: 15px; justify-content: center; align-items: center;">
+                        <button
+                            onclick="generateInvoice('{{ sale.id }}', '{{ sale.customer_name }}', '{{ sale.sale_date|date:'d M Y' }}', '{{ sale.total_amount }}')"
+                            style="color: #5b4cdb; background: none; border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem;">
+                            📄 PDF
+                        </button>
+
+                        {% if user.is_superuser %}
+                        <a href="{% url 'delete_sale' sale.pk %}"
+                            onclick="return confirm('Karmadip, are you sure you want to delete this bill? This will also affect profit calculations.')"
+                            style="color: #ef4444; text-decoration: none; font-size: 1.1rem;" title="Delete Record">
+                            🗑️
+                        </a>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
 
@@ -86,8 +97,7 @@
                 <th style="text-align: right; padding: 12px 10px;">Total</th>
             </tr>
         </thead>
-        <tbody id="pdf-items-body">
-        </tbody>
+        <tbody id="pdf-items-body"></tbody>
     </table>
 
     <div style="text-align: right; padding-right: 15px;">
@@ -102,15 +112,11 @@
 
 <script>
     function generateInvoice(saleId, customer, date, total) {
-        // Fill Header Data
         document.getElementById('pdf-cust-name').innerText = customer;
         document.getElementById('pdf-date').innerText = date;
         document.getElementById('pdf-sale-id').innerText = saleId;
-
-        // Ensure two decimal places for professional look
         document.getElementById('pdf-total').innerText = parseFloat(total).toFixed(2);
 
-        // Grab hidden item data and build the invoice table rows
         const dataContainer = document.getElementById('data-' + saleId);
         const itemRows = dataContainer.getElementsByClassName('item-row');
         let itemsHtml = '';
@@ -127,30 +133,48 @@
                 <td style="text-align: center; padding: 12px 10px;">${qty}</td>
                 <td style="text-align: right; padding: 12px 10px;">₹${parseFloat(price).toFixed(2)}</td>
                 <td style="text-align: right; padding: 12px 10px;">₹${lineTotal.toFixed(2)}</td>
-            </tr>
-        `;
+            </tr>`;
         }
         document.getElementById('pdf-items-body').innerHTML = itemsHtml;
 
-        // Trigger PDF Generation
         const invoice = document.getElementById('invoice-template');
-        invoice.style.display = 'block'; // Show temporarily for capture
+        invoice.style.display = 'block';
 
         const options = {
             margin: [0.5, 0.5],
             filename: 'DistroLoom_Bill_' + customer + '.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 2,
-                logging: false,
-                width: 850
-            },
+            html2canvas: { scale: 2, logging: false, width: 850 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
 
         html2pdf().from(invoice).set(options).save().then(() => {
-            invoice.style.display = 'none'; // Hide again after download
+            invoice.style.display = 'none';
         });
     }
 </script>
+
+<style>
+    /* Styling for the product chips to look clean */
+    .product-chip {
+        display: inline-block;
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        margin-right: 4px;
+        border: 1px solid #e2e8f0;
+    }
+
+    th {
+        background: #181c24;
+        color: white;
+        padding: 12px;
+    }
+
+    td {
+        padding: 12px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+</style>
 {% endblock %}
