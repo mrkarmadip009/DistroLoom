@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
 from django.contrib.auth import views as auth_views # Import this here!
-
+from inventory import views as inventory_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     
@@ -15,5 +15,8 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     
     # 3. Your app URLs
+    path('inventory/', include('inventory.urls')),
+    path('register/', inventory_views.register, name='register'),
+    
     path('inventory/', include('inventory.urls')),
 ]

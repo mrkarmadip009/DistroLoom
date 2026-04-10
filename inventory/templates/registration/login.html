@@ -1,4 +1,5 @@
 {% extends 'inventory/base.html' %}
+
 {% block content %}
 <div style="max-width: 400px; margin: 4rem auto;">
     <div class="form-card" style="padding: 2rem; border-radius: 1rem;">
@@ -9,6 +10,11 @@
             <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Login to
                 DistroLoom</button>
         </form>
+
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+            Don't have an account? <a href="{% url 'register' %}" style="color: #5b4cdb; font-weight: 600;">Register
+                here</a>
+        </div>
     </div>
 </div>
 {% endblock %}
