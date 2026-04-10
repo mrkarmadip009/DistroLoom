@@ -1,0 +1,14 @@
+{% extends 'inventory/base.html' %}
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto;">
+    <div class="form-card" style="padding: 2rem; border-radius: 1rem;">
+        <h2 style="text-align: center; margin-bottom: 1.5rem;">🔐 Admin Login</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Login to
+                DistroLoom</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

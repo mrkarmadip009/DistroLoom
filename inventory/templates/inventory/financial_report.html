@@ -1,0 +1,50 @@
+{% extends 'inventory/base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>📊 Confidential Report for Karmadip</h2>
+    <a href="{% url 'inventory_list' %}" class="btn-secondary" style="width: auto; padding: 0.5rem 1rem;">← Back to
+        Inventory</a>
+</div>
+
+<div
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+    <div class="form-card" style="padding: 1.5rem; border-left: 4px solid #5b4cdb;">
+        <p style="font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase;">Total Revenue</p>
+        <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">₹{{ total_revenue|floatformat:2 }}</h2>
+    </div>
+    <div class="form-card" style="padding: 1.5rem; border-left: 4px solid #22863a; background: #f0fdf4;">
+        <p style="font-size: 0.7rem; font-weight: 700; color: #166534; text-transform: uppercase;">Total Net Profit</p>
+        <h2 style="font-size: 2rem; margin-top: 0.5rem; color: #166534;">₹{{ total_profit|floatformat:2 }}</h2>
+    </div>
+    <div class="form-card" style="padding: 1.5rem; border-left: 4px solid #f59e0b;">
+        <p style="font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase;">Warehouse Value</p>
+        <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">₹{{ total_value|floatformat:2 }}</h2>
+    </div>
+    <div class="form-card" style="padding: 1.5rem; border-left: 4px solid #181c24;">
+        <p style="font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase;">Active Products</p>
+        <h2 style="font-size: 1.5rem; margin-top: 0.5rem;">{{ total_items }}</h2>
+    </div>
+</div>
+
+<h3>Product Margin Breakdown</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Item Name</th>
+            <th>Buy Price</th>
+            <th>Sell Price</th>
+            <th style="text-align: right;">Profit/Unit</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in products %}
+        <tr>
+            <td><strong>{{ p.name }}</strong></td>
+            <td>₹{{ p.buying_price }}</td>
+            <td>₹{{ p.selling_price }}</td>
+            <td style="text-align: right; color: #22863a; font-weight: 700;">₹{{ p.profit_per_item }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

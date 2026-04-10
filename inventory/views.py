@@ -3,12 +3,126 @@ from django.db import transaction
 from django.contrib import messages
 from .models import Product, Sale, SaleItem, Category
 from .forms import ProductForm
+from django.db.models import Sum, F
+from .models import Product, Sale, Category
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render, redirect
+from django.db.models import Sum, F
+from django.contrib.auth.decorators import login_required
 
+@login_required
+def inventory_list(request):
+    products = Product.objects.all()
+    # ... rest of your existing logic ...
+    return render(request, 'inventory/list_products.html', context)
+
+# Only allow the Superuser (Karmadip) to see this
+@user_passes_test(lambda u: u.is_superuser)
+def financial_report(request):
+    products = Product.objects.all()
+    total_revenue = Sale.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_value = products.aggregate(total=Sum(F('stock_quantity') * F('buying_price')))['total'] or 0
+    
+    total_profit = 0
+    sales = Sale.objects.prefetch_related('items__product').all()
+    for sale in sales:
+        for item in sale.items.all():
+            total_profit += (item.price_at_sale - item.product.buying_price) * item.quantity
+            
+    return render(request, 'inventory/financial_report.html', {
+        'products': products,
+        'total_revenue': total_revenue,
+        'total_value': total_value,
+        'total_profit': total_profit,
+        'total_items': products.count()
+    })
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created for {username}! You can now login.')
+            return redirect('login')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
 def inventory_list(request):
     products = Product.objects.all()
     low_stock = Product.objects.filter(stock_quantity__lt=10)
-    return render(request, 'inventory/list_products.html', {'products': products, 'low_stock': low_stock})
+    
+    # Calculate Total Business Stats
+    total_inventory_value = products.aggregate(
+        total=Sum(F('stock_quantity') * F('buying_price'))
+    )['total'] or 0
+    
+    total_sales_revenue = Sale.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    
+    # Calculate Total Profit from all Sales
+    # (Selling Price - Buying Price) * Quantity sold for every SaleItem
+    total_profit = 0
+    sales = Sale.objects.prefetch_related('items__product').all()
+    for sale in sales:
+        for item in sale.items.all():
+            profit = (item.price_at_sale - item.product.buying_price) * item.quantity
+            total_profit += profit
 
+    context = {
+        'products': products,
+        'low_stock': low_stock,
+        'total_value': total_inventory_value,
+        'total_revenue': total_sales_revenue,
+        'total_profit': total_profit,
+        'total_items': products.count(),
+    }
+    return render(request, 'inventory/list_products.html', context)
+
+ # inventory/views.py
+
+# inventory/views.py
+
+from django.db.models import Sum, F
+from django.contrib.auth.decorators import user_passes_test
+
+# This 'decorator' ensures ONLY the superuser can enter this page
+@user_passes_test(lambda u: u.is_superuser)
+def financial_report(request):
+    products = Product.objects.all()
+    
+    # 1. Total value of what you currently have in the shop
+    total_value = products.aggregate(
+        total=Sum(F('stock_quantity') * F('buying_price'))
+    )['total'] or 0
+    
+    # 2. Total money collected from customers
+    total_revenue = Sale.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    
+    # 3. Calculate Profit: (Selling Price - Buying Price) * Quantity for every sale
+    total_profit = 0
+    sales = Sale.objects.prefetch_related('items__product').all()
+    for sale in sales:
+        for item in sale.items.all():
+            # Basic Math: Profit = (What you sold it for - What you bought it for) * How many
+            profit_on_item = (item.price_at_sale - item.product.buying_price) * item.quantity
+            total_profit += profit_on_item
+
+    context = {
+        'products': products,
+        'total_revenue': total_revenue,
+        'total_value': total_value,
+        'total_profit': total_profit,
+        'total_items': products.count(),
+    }
+    return render(request, 'inventory/financial_report.html', context)
+
+def unlock_session(request):
+    if request.method == "POST":
+        request.session['profit_unlocked'] = True
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'denied'}, status=403)
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'inventory/category_list.html', {'categories': categories})

@@ -137,29 +137,18 @@
             background: #181c24;
             color: #f2f3f7;
             text-align: left;
-            padding: .75rem;
+            padding: 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         td {
-            padding: .75rem;
+            padding: 1rem;
             border-bottom: 1px solid #e5e7eb;
         }
 
-        /* 2. "Wonderful" Form Styling */
-        .form-card p {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-card label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #181c24;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.025em;
-        }
-
+        /* "Wonderful" Form Styling */
         .form-card input,
         .form-card select,
         .form-card textarea {
@@ -191,19 +180,6 @@
             font-size: .75rem;
         }
 
-        .product-chip {
-            background: #5b4cdb15;
-            color: #5b4cdb;
-            border: 1px solid #5b4cdb30;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 13px;
-            display: inline-flex;
-            align-items: center;
-            margin-right: 5px;
-        }
-
         .btn-primary,
         .btn-save {
             display: inline-flex;
@@ -220,14 +196,6 @@
             cursor: pointer;
             transition: all 0.2s;
             width: 100%;
-            /* For full width in forms */
-        }
-
-        .btn-primary:hover,
-        .btn-save:hover {
-            opacity: .9;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(91, 76, 219, 0.3);
         }
 
         .footer {
@@ -237,7 +205,7 @@
             font-size: .875rem;
         }
 
-        /* 3. Printing/PDF Utility */
+        /* Printing/PDF Utility */
         @media print {
 
             .navbar,
@@ -253,6 +221,11 @@
                 padding: 0;
             }
         }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color 0.2s ease;
+        }
     </style>
 </head>
 
@@ -265,6 +238,19 @@
                 <a href="{% url 'category_list' %}" class="nav-link">📂 Categories</a>
                 <a href="{% url 'sales_history' %}" class="nav-link">📜 History</a>
                 <a href="{% url 'add_product' %}" class="nav-link">➕ + Add Stock</a>
+
+                {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link"
+                        style="background:none; border:none; cursor:pointer; font-family:inherit;">
+                        🚪 Logout ({{ user.username }})
+                    </button>
+                </form>
+                {% else %}
+                <a href="{% url 'login' %}" class="nav-link">🔑 Login</a>
+                {% endif %}
+
                 <a href="{% url 'create_bill' %}" class="nav-btn">📄 Create Bill</a>
             </div>
         </div>

@@ -122,3 +122,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# DistroLoom/settings.py
+LOGIN_REDIRECT_URL = 'inventory_list'
+LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = 'login'
+# Where to go after login
+
+# Where to go after logout
+
+# This forces the user to the login page if they try to access the site root

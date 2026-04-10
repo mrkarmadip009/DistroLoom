@@ -1,0 +1,14 @@
+{% extends 'inventory/base.html' %}
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto;">
+    <div class="form-card" style="padding: 2rem;">
+        <h2 style="margin-bottom: 1.5rem;">📝 Create Account</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-primary" style="margin-top: 1rem;">Register</button>
+        </form>
+        <p style="margin-top: 1rem; font-size: 0.8rem;">Already have an account? <a href="{% url 'login' %}" style="color: #5b4cdb;">Login here</a></p>
+    </div>
+</div>
+{% endblock %}
