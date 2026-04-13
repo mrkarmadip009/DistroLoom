@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>{% block title %}DistroLoom{% endblock %}</title>
 
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#181c24">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -126,7 +133,6 @@
             min-height: 70vh;
         }
 
-        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -148,30 +154,6 @@
             border-bottom: 1px solid #e5e7eb;
         }
 
-        /* "Wonderful" Form Styling */
-        .form-card input,
-        .form-card select,
-        .form-card textarea {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            border-radius: 0.75rem;
-            border: 1px solid #dcdee6;
-            background: #f8f9fa;
-            color: #181c24;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            outline: none;
-            font-family: inherit;
-        }
-
-        .form-card input:focus,
-        .form-card select:focus {
-            border-color: #5b4cdb;
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.1);
-        }
-
-        /* Reusable Components */
         .badge {
             background: #ededf9;
             color: #5b4cdb;
@@ -180,8 +162,7 @@
             font-size: .75rem;
         }
 
-        .btn-primary,
-        .btn-save {
+        .btn-primary {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -194,7 +175,6 @@
             font-weight: 600;
             border: none;
             cursor: pointer;
-            transition: all 0.2s;
             width: 100%;
         }
 
@@ -205,7 +185,6 @@
             font-size: .875rem;
         }
 
-        /* Printing/PDF Utility */
         @media print {
 
             .navbar,
@@ -265,6 +244,23 @@
         </div>
     </div>
     <footer class="footer">© 2026 DistroLoom Business Suite</footer>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/static/sw.js').then(function (registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function (err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js');
+        }
+    </script>
 </body>
 
 </html>

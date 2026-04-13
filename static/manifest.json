@@ -1,0 +1,15 @@
+{
+    "name": "DistroLoom Business Suite",
+    "short_name": "DistroLoom",
+    "start_url": "/inventory/dashboard/",
+    "display": "standalone",
+    "background_color": "#181c24",
+    "theme_color": "#5b4cdb",
+    "icons": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/1162/1162251.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
