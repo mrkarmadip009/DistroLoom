@@ -118,11 +118,11 @@ USE_TZ = True
 
 import os
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Add this line so Django looks for the folder you just created
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    BASE_DIR/"static"
 ]
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

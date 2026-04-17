@@ -133,7 +133,7 @@
             min-height: 70vh;
         }
 
-        table {
+        <link rel="manifest" href="/static/manifest.json"><meta name="theme-color" content="#22863a">table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
@@ -259,6 +259,14 @@
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/sw.js');
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/serviceworker.js')
+                .then(function () {
+                    console.log("Service Worker Registered");
+                });
         }
     </script>
 </body>
