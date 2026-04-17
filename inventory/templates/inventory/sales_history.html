@@ -39,9 +39,8 @@
                 <td class="no-print" style="text-align:center; min-width: 120px;">
                     <div style="display: flex; gap: 15px; justify-content: center; align-items: center;">
                         <button
-                            onclick="generateInvoice('{{ sale.id }}', '{{ sale.customer_name }}', '{{ sale.sale_date|date:'d M Y' }}', '{{ sale.total_amount }}')"
-                            style="color: #5b4cdb; background: none; border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem;">
-                            📄 PDF
+                            onclick="generateInvoice('{{ sale.id }}', '{{ sale.customer_name }}', '{{ sale.sale_date }}', '{{ sale.total_amount }}')">
+                            Download PDF
                         </button>
 
                         {% if user.is_superuser %}

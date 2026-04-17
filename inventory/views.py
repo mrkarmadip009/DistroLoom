@@ -263,3 +263,38 @@ def create_bill(request):
 def sales_history(request):
     sales = Sale.objects.prefetch_related('items__product').all().order_by('-sale_date')
     return render(request, 'inventory/sales_history.html', {'sales': sales})
+
+
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from django.shortcuts import get_object_or_404
+
+@login_required
+def download_bill(request, sale_id):
+    sale = get_object_or_404(Sale, id=sale_id)
+
+    response = HttpResponse(content_type='application/pdf')
+
+    # 🔥 THIS IS THE MAIN FIX
+    response['Content-Disposition'] = f'inline; filename="bill_{sale.id}.pdf"'
+
+    p = canvas.Canvas(response)
+
+    # 🧾 Bill Design
+    p.setFont("Helvetica", 12)
+
+    p.drawString(50, 800, f"Bill ID: {sale.id}")
+    p.drawString(50, 780, f"Customer: {sale.customer_name}")
+    p.drawString(50, 760, f"Date: {sale.sale_date}")
+
+    y = 720
+
+    for item in sale.items.all():
+        p.drawString(50, y, f"{item.product.name} - {item.quantity} x {item.price_at_sale}")
+        y -= 20
+
+    p.drawString(50, y - 20, f"Total Amount: {sale.total_amount}")
+
+    p.save()
+
+    return response
