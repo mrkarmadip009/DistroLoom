@@ -1,86 +1,285 @@
 {% extends 'inventory/base.html' %}
 
+{% block title %}DistroLoom | Current Inventory{% endblock %}
+
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <div style="display:flex; align-items:center; gap:.75rem;">
-        <div class="icon-box" style="font-size: 1.5rem;">📦</div>
-        <h2 style="font-size:1.25rem; font-weight:700;">Current Inventory Details</h2>
+<style>
+    /* Premium Dashboard Specific Custom CSS */
+    .dashboard-card {
+        background: #ffffff;
+        border-radius: 1.25rem;
+        padding: 2.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(220, 222, 230, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    /* FIXED FLEXBOX DISTRIBUTION FOR ADMIN LAYOUT */
+    .flex-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        /* Triggers safe wrap on smaller viewports */
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .header-title h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #181c24;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        /* Prevents text from splitting into two lines */
+    }
+
+    /* Fixed Button Layout for Admin */
+    .btn-finance {
+        background: #181c24;
+        color: #fff;
+        font-size: 0.85rem;
+        padding: 0.65rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 5px rgba(24, 28, 36, 0.15);
+        transition: all 0.2s ease;
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+
+    .btn-finance:hover {
+        background: #2c323f;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(24, 28, 36, 0.25);
+    }
+
+    /* Upgraded Modern Search Box */
+    .search-wrapper {
+        position: relative;
+        margin-bottom: 1.75rem;
+        max-width: 450px;
+    }
+
+    .search-wrapper input {
+        width: 100%;
+        padding: 0.85rem 1rem 0.85rem 2.75rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        font-size: 0.9rem;
+        font-family: inherit;
+        color: #181c24;
+        outline: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .search-wrapper input:focus {
+        background: #ffffff;
+        border-color: #5b4cdb;
+        box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.12);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.95rem;
+        pointer-events: none;
+    }
+
+    /* Table UI Enhancement */
+    .table-container {
+        overflow-x: auto;
+        border-radius: 0.85rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .custom-table th {
+        background: #181c24;
+        color: #f8fafc;
+        text-align: left;
+        padding: 1rem 1.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .custom-table td {
+        padding: 1.1rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.92rem;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .custom-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .custom-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        background-color: #f8fafc !important;
+    }
+
+    /* Status & Badge Utilities */
+    .badge-category {
+        background: rgba(91, 76, 219, 0.08);
+        color: #5b4cdb;
+        padding: 0.3rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        display: inline-block;
+    }
+
+    .stock-indicator {
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.35rem;
+    }
+
+    .stock-low {
+        color: #ef4444;
+        background: #fef2f2;
+    }
+
+    .stock-normal {
+        color: #0f766e;
+        background: #f0fdfa;
+    }
+
+    .action-text {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #94a3b8;
+        background: #f1f5f9;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.5rem;
+        display: inline-block;
+    }
+
+    .btn-delete {
+        color: #ef4444;
+        font-size: 1.15rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 0.5rem;
+        background: #fef2f2;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .btn-delete:hover {
+        background: #fee2e2;
+        transform: scale(1.08);
+    }
+
+    .price-tag {
+        font-weight: 700;
+        color: #0f172a;
+    }
+</style>
+
+<div class="dashboard-card">
+    <div class="flex-header">
+        <div class="header-title">
+            <span>📦</span>
+            <h2>Current Inventory Details</h2>
+        </div>
+        {% if user.is_superuser %}
+        <a href="{% url 'financial_report' %}" class="btn-finance">
+            📊 View Financial Report
+        </a>
+        {% endif %}
     </div>
 
-    {% if user.is_superuser %}
-    <a href="{% url 'financial_report' %}" class="btn-primary"
-        style="background: #181c24; width: auto; font-size: 0.8rem; text-decoration: none; padding: 10px 20px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px;">
-        📊 View Financial Report
-    </a>
-    {% else %}
-    <div
-        style="font-size: 0.75rem; color: #6b7280; background: #f8f9fa; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-        🔒 Admin Login Required for Profit Data
+    <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="inventorySearch" placeholder="Search product name or category...">
     </div>
-    {% endif %}
-</div>
 
-<div class="search-box"
-    style="display:flex; align-items:center; gap:.5rem; padding:.75rem 1rem; border-radius:.75rem; border:1px solid #dcdee6; background:#fff; margin-bottom:1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-    🔍 <input type="text" id="inventorySearch" placeholder="Search product name or category..."
-        style="flex:1; border:none; outline:none; font-size:.875rem; font-family:inherit;">
-</div>
-
-<div style="overflow-x:auto; border-radius:.75rem; border:1px solid #e5e7eb; background: #fff;">
-    <table id="inventoryTable">
-        <thead>
-            <tr>
-                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: left;">Item Name</th>
-                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: left;">Category</th>
-                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: center;">Stock</th>
-                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: right;">Selling Price</th>
-                {% if user.is_superuser %}
-                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: center;">Actions</th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for product in products %}
-            <tr style="border-bottom: 1px solid #f0f0f0;">
-                <td style="padding: 1rem;"><strong>{{ product.name }}</strong></td>
-                <td style="padding: 1rem;"><span class="badge">{{ product.category.name }}</span></td>
-                <td
-                    style="padding: 1rem; text-align: center; {% if product.stock_quantity < 10 %}color:#ef4444; font-weight:700;{% endif %}">
-                    {{ product.stock_quantity }}
-                </td>
-                <td style="padding: 1rem; text-align: right; font-weight: 600;">₹{{ product.selling_price }}</td>
-
-                {% if user.is_superuser %}
-                <td style="padding: 1rem; text-align: center;">
-                    <a href="{% url 'delete_product' product.pk %}"
-                        onclick="return confirm('Karmadip, are you sure you want to delete {{ product.name }}? This cannot be undone.')"
-                        style="color: #ef4444; text-decoration: none; font-size: 1.2rem; transition: transform 0.2s; display: inline-block;"
-                        onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                        🗑️
-                    </a>
-                </td>
-                {% endif %}
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" style="padding: 3rem; text-align: center; color: #6b7280;">
-                    No products found in inventory. <a href="{% url 'add_product' %}" style="color: #5b4cdb;">Add one
-                        now?</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table id="inventoryTable" class="custom-table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th class="text-center">Stock</th>
+                    <th class="text-right">Selling Price</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td><strong>{{ product.name }}</strong></td>
+                    <td><span class="badge-category">{{ product.category.name }}</span></td>
+                    <td class="text-center">
+                        {% if product.stock_quantity < 10 %} <span class="stock-indicator stock-low">{{
+                            product.stock_quantity }} (Low)</span>
+                            {% else %}
+                            <span class="stock-indicator stock-normal">{{ product.stock_quantity }}</span>
+                            {% endif %}
+                    </td>
+                    <td class="text-right price-tag">₹{{ product.selling_price }}</td>
+                    <td class="text-center">
+                        {% if user.is_superuser %}
+                        <a href="{% url 'delete_product' product.pk %}"
+                            onclick="return confirm('Karmadip, are you sure you want to delete {{ product.name }}? This cannot be undone.')"
+                            class="btn-delete">
+                            🗑️
+                        </a>
+                        {% else %}
+                        <span class="action-text">No Access</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center" style="color: #64748b; padding: 3rem 0;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+                        No products available in inventory. Click "+ Add Stock" to begin.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // Live Search Logic: Filters the table as you type
+    // Premium Real-Time Filtering Logic
     document.getElementById('inventorySearch').addEventListener('keyup', function () {
         let filter = this.value.toLowerCase();
         let rows = document.querySelectorAll('#inventoryTable tbody tr');
-
         rows.forEach(row => {
-            // Only search if the row isn't the "Empty" message
             if (row.cells.length > 1) {
                 let text = row.innerText.toLowerCase();
                 row.style.display = text.includes(filter) ? '' : 'none';
@@ -88,20 +287,4 @@
         });
     });
 </script>
-
-<style>
-    tbody tr:hover {
-        background-color: #fcfcfd !important;
-    }
-
-    .badge {
-        background: #5b4cdb15;
-        color: #5b4cdb;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-</style>
 {% endblock %}

@@ -11,11 +11,16 @@ urlpatterns = [
     path('sales/', views.sales_history, name='sales_history'),
     path('reports/finance/', views.financial_report, name='financial_report'),
     path('unlock-profit/', views.unlock_session, name='unlock_session'),
+    # Naya path category ke andar ke items dekhne ke liye
+    path('category/<int:category_id>/products/', views.category_products, name='category_products'),
+    # Corrected Template Directories reflecting your registration folder structure
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', views.custom_logout, name='logout'),
     path('register/', views.register, name='register'),
+    
+    # Actions Layer Routing Paths
     path('product/delete/<int:pk>/', views.delete_product, name='delete_product'),
     path('category/delete/<int:pk>/', views.delete_category, name='delete_category'),
     path('sale/delete/<int:pk>/', views.delete_sale, name='delete_sale'),
-   path('download-bill/<int:sale_id>/', views.download_bill, name='download_bill'),
+    path('download-bill/<int:sale_id>/', views.download_bill, name='download_bill'),
 ]

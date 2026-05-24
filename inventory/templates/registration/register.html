@@ -1,14 +1,21 @@
 {% extends 'inventory/base.html' %}
+
+{% block title %}Create Account | DistroLoom{% endblock %}
+
 {% block content %}
-<div style="max-width: 400px; margin: 4rem auto;">
-    <div class="form-card" style="padding: 2rem;">
-        <h2 style="margin-bottom: 1.5rem;">📝 Create Account</h2>
+<div class="auth-wrapper">
+    <div class="form-card">
+        <h2>📝 Create Account</h2>
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" class="btn-primary" style="margin-top: 1rem;">Register</button>
+            <button type="submit" class="btn-primary" style="margin-top: 0.75rem;">
+                Register Account
+            </button>
         </form>
-        <p style="margin-top: 1rem; font-size: 0.8rem;">Already have an account? <a href="{% url 'login' %}" style="color: #5b4cdb;">Login here</a></p>
+        <div class="form-card-footer">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -1,72 +1,318 @@
-{% extends 'inventory/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block content %}
-<div style="max-width: 550px; margin: 0 auto;">
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <div class="icon-box" style="width: 50px; height: 50px; margin: 0 auto 1rem;">➕</div>
-        <h2 style="font-weight: 800;">Add / Update Stock</h2>
-        <p style="color: #6b7280; font-size: 0.9rem;">Create new items or update existing inventory</p>
-    </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>DistroLoom</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#181c24">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-    <div class="form-card"
-        style="padding: 1.5rem; margin-bottom: 1.5rem; border: 1px dashed #5b4cdb50; border-radius: 1rem; background: #5b4cdb08;">
-        <h3 style="font-size: 0.85rem; text-transform: uppercase; color: #5b4cdb; margin-bottom: 1rem;">Search Existing
-            Products</h3>
-        <select id="product-selector" class="form-input" style="border-color: #5b4cdb50;">
-            <option value="">-- Start Typing to Find Product --</option>
-            {% for p in products %}
-            <option value="{{ p.id }}" data-name="{{ p.name }}" data-category="{{ p.category.id }}"
-                data-stock="{{ p.stock_quantity }}" data-buying="{{ p.buying_price }}"
-                data-selling="{{ p.selling_price }}">
-                {{ p.name }} (Current Stock: {{ p.stock_quantity }})
-            </option>
-            {% endfor %}
-        </select>
-    </div>
+        /* Global Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <form method="POST" class="form-card" style="padding: 1.5rem; border: 1px solid #eee; border-radius: 1rem;">
-        {% csrf_token %}
-        <h3 style="font-size: 0.85rem; text-transform: uppercase; margin-bottom: 1rem;">Product Details</h3>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f2f3f7;
+            color: #181c24;
+            line-height: 1.5;
+        }
 
-        {{ form.as_p }}
+        /* --- THE HOVER LIFT EFFECT --- */
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+            display: inline-block;
+        }
 
-        <button type="submit" class="btn-save">🚀 Save to Inventory</button>
-    </form>
+        .hover-lift:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+        }
 
-    <div style="text-align: center; margin-top: 1.5rem;">
-        <a href="{% url 'inventory_list' %}" class="back-link">← Back to Dashboard</a>
-    </div>
-</div>
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
 
-<script>
-    $(document).ready(function () {
-        $('#product-selector').change(function () {
-            // Find the selected option
-            var selected = $(this).find('option:selected');
+        /* Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: #181c24;
+            color: #f2f3f7;
+            box-shadow: 0 2px 12px rgba(24, 28, 36, 0.15);
+        }
 
-            if (selected.val()) {
-                // Fill the Django form inputs with selected data
-                $('#id_name').val(selected.data('name'));
-                $('#id_category').val(selected.data('category'));
+        .nav-inner {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-                // For stock, we assume you're *adding* to the total, not just setting it
-                var currentStock = selected.data('stock');
-                $('#id_stock_quantity').val(currentStock).focus(); // Highlight stock input
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+        }
 
-                // Set prices, allows you to change them if needed
-                $('#id_buying_price').val(selected.data('buying'));
-                $('#id_selling_price').val(selected.data('selling'));
-            } else {
-                // Clear form if no product is selected (create mode)
-                $('#id_name').val('');
-                $('#id_category').val('');
-                $('#id_stock_quantity').val('0');
-                $('#id_buying_price').val('');
-                $('#id_selling_price').val('');
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .4rem .75rem;
+            border-radius: .5rem;
+            font-size: .875rem;
+            font-weight: 500;
+            color: rgba(242, 243, 247, 0.6);
+            transition: all .2s;
+        }
+
+        .nav-link:hover {
+            color: #f2f3f7;
+            background: rgba(242, 243, 247, 0.1);
+        }
+
+        .nav-btn {
+            margin-left: .75rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .5rem 1rem;
+            border-radius: .75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: .875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Main Layout */
+        .main-wrap {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .main-card {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 1px 3px rgba(24, 28, 36, 0.04), 0 8px 24px rgba(24, 28, 36, 0.06);
+            border: 1px solid rgba(220, 222, 230, 0.6);
+            min-height: 60vh;
+        }
+
+        /* Form Styling */
+        form p {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.6rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.85rem;
+            margin-top: 1rem;
+            border-radius: 0.75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+            font-size: .875rem;
+        }
+
+        @media print {
+
+            .navbar,
+            .footer,
+            .no-print {
+                display: none !important;
             }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="/inventory/dashboard/" class="nav-logo">📦 DistroLoom</a>
+            <div class="nav-links">
+                <a href="/inventory/dashboard/" class="nav-link hover-lift">📦 Inventory</a>
+                <a href="/inventory/categories/" class="nav-link hover-lift">📂 Categories</a>
+                <a href="/inventory/sales/" class="nav-link hover-lift">📜 History</a>
+                <a href="/inventory/add/" class="nav-link hover-lift">➕ + Stock</a>
+                <form action="/inventory/logout/" method="post"
+                    style="display:inline; margin:0; padding:0; width:auto;">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="...">
+                    <button type="submit" class="nav-link hover-lift"
+                        style="background:none; border:none; cursor:pointer; font-family:inherit;">
+                        🚪 Logout
+                    </button>
+                </form>
+                <a href="/inventory/bill/" class="nav-btn hover-lift">📄 Create Bill</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-wrap">
+        <div class="main-card">
+            <div style="max-width: 550px; margin: 0 auto;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div class="icon-box" style="font-size: 2rem; margin-bottom: 1rem;">➕</div>
+                    <h2 style="font-weight: 800;">Add / Update Stock</h2>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Create new items or update existing inventory</p>
+                </div>
+
+                <div class="form-card hover-lift"
+                    style="padding: 1.5rem; margin-bottom: 1.5rem; border: 1px dashed #5b4cdb50; border-radius: 1rem; background: #5b4cdb08; width: 100%;">
+                    <h3
+                        style="font-size: 0.85rem; text-transform: uppercase; color: #5b4cdb; margin-bottom: 1rem; font-weight: 700;">
+                        Search Existing Products
+                    </h3>
+                    <select id="product-selector" style="border: 1px solid #5b4cdb30;">
+                        <option value="">-- Start Typing to Find Product --</option>
+                        <option value="2" data-name="bhutdo" data-category="4" data-stock="300" data-buying="30.00"
+                            data-selling="40.00">bhutdo (300)</option>
+                        <option value="4" data-name="container" data-category="2" data-stock="50" data-buying="150.00"
+                            data-selling="200.00">container (50)</option>
+                        <option value="1" data-name="jambu" data-category="2" data-stock="90" data-buying="120.00"
+                            data-selling="150.00">jambu (90)</option>
+                        <option value="3" data-name="patty khaja" data-category="2" data-stock="100"
+                            data-buying="130.00" data-selling="150.00">patty khaja (100)</option>
+                    </select>
+                </div>
+
+                <form method="POST" class="form-card"
+                    style="padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 1rem; background: #fff;">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="...">
+                    <h3
+                        style="font-size: 0.85rem; text-transform: uppercase; margin-bottom: 1.5rem; color: #374151; font-weight: 700;">
+                        Product Details
+                    </h3>
+                    <p>
+                        <label for="id_name">Name:</label>
+                        <input type="text" name="name" required id="id_name">
+                    </p>
+                    <p>
+                        <label for="id_category">Category:</label>
+                        <select name="category" required id="id_category">
+                            <option value="">---------</option>
+                            <option value="1">water</option>
+                            <option value="2">sweets</option>
+                            <option value="3">sing</option>
+                            <option value="4">Tobacco</option>
+                        </select>
+                    </p>
+                    <p>
+                        <label for="id_stock_quantity">Stock quantity:</label>
+                        <input type="number" name="stock_quantity" value="0" required id="id_stock_quantity">
+                    </p>
+                    <p>
+                        <label for="id_buying_price">Buying price:</label>
+                        <input type="number" name="buying_price" step="0.01" required id="id_buying_price">
+                    </p>
+                    <p>
+                        <label for="id_selling_price">Selling price:</label>
+                        <input type="number" name="selling_price" step="0.01" required id="id_selling_price">
+                    </p>
+                    <button type="submit" class="btn-primary hover-lift">🚀 Save to Inventory</button>
+                </form>
+
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a href="/inventory/dashboard/" class="back-link hover-lift"
+                        style="color: #6b7280; font-size: 0.875rem;">
+                        ← Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="footer">© 2026 DistroLoom Business Suite</footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#product-selector').change(function () {
+                var selected = $(this).find('option:selected');
+                if (selected.val()) {
+                    $('#id_name').val(selected.data('name'));
+                    $('#id_category').val(selected.data('category'));
+                    $('#id_stock_quantity').val(selected.data('stock')).focus();
+                    $('#id_buying_price').val(selected.data('buying'));
+                    $('#id_selling_price').val(selected.data('selling'));
+                } else {
+                    $('#id_name, #id_category, #id_buying_price, #id_selling_price').val('');
+                    $('#id_stock_quantity').val('0');
+                }
+            });
         });
-    });
-</script>
-{% endblock %}
+    </script>
+</body>
+
+</html>

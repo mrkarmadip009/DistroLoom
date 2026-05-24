@@ -1,53 +1,346 @@
-{% extends 'inventory/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <div style="display:flex; align-items:center; gap:.75rem;">
-        <div class="icon-box" style="font-size: 1.5rem;">📂</div>
-        <h2 style="font-size:1.25rem; font-weight:700;">Product Categories</h2>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>DistroLoom - Categories</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#181c24">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+        /* Global Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f2f3f7;
+            color: #181c24;
+            line-height: 1.5;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Navbar Layout */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: #181c24;
+            color: #f2f3f7;
+            box-shadow: 0 2px 12px rgba(24, 28, 36, 0.15);
+        }
+
+        .nav-inner {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .4rem .75rem;
+            border-radius: .5rem;
+            font-size: .875rem;
+            font-weight: 500;
+            color: rgba(242, 243, 247, 0.6);
+            transition: all .2s;
+        }
+
+        .nav-link:hover {
+            color: #f2f3f7;
+            background: rgba(242, 243, 247, 0.1);
+        }
+
+        .nav-btn {
+            margin-left: .75rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .5rem 1rem;
+            border-radius: .75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: .875rem;
+            font-weight: 600;
+            border: none;
+            transition: all .2s;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            opacity: 0.9;
+            box-shadow: 0 4px 12px rgba(91, 76, 219, 0.3);
+        }
+
+        /* Main Premium Card Wrapper */
+        .main-wrap {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .main-card {
+            background: #fff;
+            border-radius: 1.25rem;
+            padding: 2.25rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(220, 222, 230, 0.5);
+        }
+
+        .flex-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Upgraded Form Buttons */
+        .btn-add {
+            background: #5b4cdb;
+            color: white;
+            padding: 0.65rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(91, 76, 219, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .btn-add:hover {
+            background: #4a3bc4;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(91, 76, 219, 0.35);
+        }
+
+        /* Premium Table System Layouts */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 0.85rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th {
+            background: #181c24;
+            color: #f8fafc;
+            text-align: left;
+            padding: 1rem 1.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        td {
+            padding: 1.1rem 1.25rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.92rem;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+
+        /* Interactive Dynamic Badge Viewport Link rules */
+        .badge-link {
+            display: inline-block;
+            transition: transform 0.2s ease;
+            text-decoration: none;
+        }
+
+        .badge-link:hover {
+            transform: scale(1.05);
+        }
+
+        .badge {
+            background: rgba(91, 76, 219, 0.08);
+            color: #5b4cdb;
+            padding: 0.35rem 0.85rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            display: inline-block;
+            border: 1px solid rgba(91, 76, 219, 0.15);
+        }
+
+        .badge:hover {
+            background: rgba(91, 76, 219, 0.15);
+            color: #4a3bc4;
+        }
+
+        .btn-delete {
+            color: #ef4444;
+            font-size: 1.15rem;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            background: #fef2f2;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-delete:hover {
+            background: #fee2e2;
+            transform: scale(1.08);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+            font-size: .875rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="/inventory/dashboard/" class="nav-logo">📦 DistroLoom</a>
+            <div class="nav-links">
+                <a href="/inventory/dashboard/" class="nav-link">📦 Inventory</a>
+                <a href="/inventory/categories/" class="nav-link">📂 Categories</a>
+                <a href="/inventory/sales/" class="nav-link">📜 History</a>
+                <a href="/inventory/add/" class="nav-link">➕ + Stock</a>
+                <form action="/inventory/logout/" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link"
+                        style="background:none; border:none; cursor:pointer; font-family:inherit;">
+                        🚪 Logout ({{ user.username }})
+                    </button>
+                </form>
+                <a href="/inventory/bill/" class="nav-btn">📄 Create Bill</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-wrap">
+        <div class="main-card">
+            <div class="flex-header">
+                <div style="display:flex; align-items:center; gap:.75rem;">
+                    <div style="font-size: 1.5rem;">📂</div>
+                    <h2 style="font-size:1.3rem; font-weight:700; color:#181c24;">Product Categories</h2>
+                </div>
+
+                <a href="/inventory/category/add/" class="btn-add">
+                    ➕ Add New Category
+                </a>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">Category Name</th>
+                            <th style="text-align: center;">Total Products</th>
+                            {% if user.is_superuser %}
+                            <th style="text-align: center;">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td><strong style="color:#0f172a; text-transform: capitalize;">{{ category.name }}</strong>
+                            </td>
+                            <td style="text-align: center;">
+                                <a href="{% url 'category_products' category.id %}" class="badge-link"
+                                    title="Click to view all {{ category.name }} products">
+                                    <span class="badge">🔍 {{ category.product_set.count }} Items</span>
+                                </a>
+                            </td>
+
+                            {% if user.is_superuser %}
+                            <td style="text-align: center;">
+                                <a href="{% url 'delete_category' category.id %}"
+                                    onclick="return confirm('Deleting this category might affect items inside it. Continue?')"
+                                    class="btn-delete">
+                                    🗑️
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 3rem 0; color: #64748b;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+                                No categories found. Click "Add New Category" to start.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <a href="{% url 'add_category' %}" class="btn-primary"
-        style="width: auto; padding: 10px 20px; text-decoration: none;">
-        ➕ Add New Category
-    </a>
-</div>
+    <footer class="footer">© 2026 DistroLoom Business Suite</footer>
+</body>
 
-<div style="overflow-x:auto; border-radius:.75rem; border:1px solid #e5e7eb; background: #fff;">
-    <table>
-        <thead>
-            <tr>
-                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: left;">Category Name</th>
-                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: center;">Total Products</th>
-                {% if user.is_superuser %}
-                <th style="padding: 1rem; background: #181c24; color: #fff; text-align: center;">Actions</th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for category in categories %}
-            <tr style="border-bottom: 1px solid #f0f0f0;">
-                <td style="padding: 1rem;"><strong>{{ category.name }}</strong></td>
-                <td style="padding: 1rem; text-align: center;">
-                    <span class="badge">{{ category.product_set.count }} Items</span>
-                </td>
-
-                {% if user.is_superuser %}
-                <td style="padding: 1rem; text-align: center;">
-                    <a href="{% url 'delete_category' category.pk %}"
-                        onclick="return confirm('Karmadip, deleting this category might affect items inside it. Continue?')"
-                        style="color: #ef4444; text-decoration: none; font-size: 1.2rem;">
-                        🗑️
-                    </a>
-                </td>
-                {% endif %}
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" style="padding: 3rem; text-align: center; color: #6b7280;">No categories found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endblock %}
+</html>

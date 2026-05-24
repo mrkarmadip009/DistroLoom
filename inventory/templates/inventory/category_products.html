@@ -1,0 +1,152 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}DistroLoom | {{ category.name }} Items{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-card {
+        background: #ffffff;
+        border-radius: 1.25rem;
+        padding: 2.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(220, 222, 230, 0.5);
+    }
+
+    .flex-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        gap: 1.5rem;
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .header-title h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #181c24;
+    }
+
+    .btn-back {
+        background: #181c24;
+        color: #fff;
+        font-size: 0.85rem;
+        padding: 0.65rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+        background: #2c323f;
+        transform: translateY(-1px);
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: 0.85rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .custom-table th {
+        background: #181c24;
+        color: #f8fafc;
+        text-align: left;
+        padding: 1rem 1.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .custom-table td {
+        padding: 1.1rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.92rem;
+        color: #334155;
+    }
+
+    .custom-table tbody tr:hover {
+        background-color: #f8fafc !important;
+    }
+
+    .stock-indicator {
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.35rem;
+    }
+
+    .stock-low {
+        color: #ef4444;
+        background: #fef2f2;
+    }
+
+    .stock-normal {
+        color: #0f766e;
+        background: #f0fdfa;
+    }
+
+    .price-tag {
+        font-weight: 700;
+        color: #0f172a;
+    }
+</style>
+
+<div class="dashboard-card">
+    <div class="flex-header">
+        <div class="header-title">
+            <span>📂</span>
+            <h2>Items in Category: <span style="color: #5b4cdb; text-transform: capitalize;">{{ category.name }}</span>
+            </h2>
+        </div>
+        <a href="{% url 'category_list' %}" class="btn-back">⬅️ Back to Categories</a>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th class="text-center" style="text-align: center;">Available Stock</th>
+                    <th class="text-right" style="text-align: right;">Selling Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td><strong>{{ product.name }}</strong></td>
+                    <td style="text-align: center;">
+                        {% if product.stock_quantity < 10 %} <span class="stock-indicator stock-low">{{
+                            product.stock_quantity }} (Low)</span>
+                            {% else %}
+                            <span class="stock-indicator stock-normal">{{ product.stock_quantity }}</span>
+                            {% endif %}
+                    </td>
+                    <td style="text-align: right;" class="price-tag">₹{{ product.selling_price }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #64748b; padding: 3rem 0;">
+                        📭 Is category ke andar abhi koi item nahi hai.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

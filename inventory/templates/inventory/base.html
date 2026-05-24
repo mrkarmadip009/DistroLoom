@@ -44,7 +44,7 @@
             color: inherit;
         }
 
-        /* Navbar */
+        /* Navbar Layout */
         .navbar {
             position: sticky;
             top: 0;
@@ -117,7 +117,7 @@
             box-shadow: 0 4px 12px rgba(91, 76, 219, 0.3);
         }
 
-        /* Main Container */
+        /* Centralized Main Wrappers */
         .main-wrap {
             max-width: 72rem;
             margin: 0 auto;
@@ -133,7 +133,106 @@
             min-height: 70vh;
         }
 
-        <link rel="manifest" href="/static/manifest.json"><meta name="theme-color" content="#22863a">table {
+        /* Reusable Form Wrapper Layouts */
+        .auth-wrapper {
+            max-width: 400px;
+            margin: 4rem auto;
+        }
+
+        .form-card {
+            background: #fff;
+            padding: 2.5rem 2rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(220, 222, 230, 0.5);
+            box-shadow: 0 4px 18px rgba(24, 28, 36, 0.03);
+        }
+
+        .form-card h2 {
+            text-align: center;
+            margin-bottom: 1.75rem;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        /* Dynamic Django form.as_p Styling Rules */
+        .form-card form p {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-card form label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: #4b5563;
+        }
+
+        .form-card form input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #dcdee6;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            background: #f9fafb;
+            transition: all 0.2s ease;
+        }
+
+        .form-card form input:focus {
+            background: #fff;
+            border-color: #5b4cdb;
+            box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.12);
+        }
+
+        /* Universal Upgraded UI Buttons */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: 0.85rem 1.5rem;
+            border-radius: .75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(91, 76, 219, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary:hover {
+            background: #4a3bc4;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(91, 76, 219, 0.35);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(91, 76, 219, 0.2);
+        }
+
+        .form-card-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .form-card-footer a {
+            color: #5b4cdb;
+            font-weight: 600;
+        }
+
+        .form-card-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* General Inventory Table Defaults */
+        table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
@@ -154,28 +253,20 @@
             border-bottom: 1px solid #e5e7eb;
         }
 
-        .badge {
-            background: #ededf9;
-            color: #5b4cdb;
-            padding: .2rem .5rem;
-            border-radius: 10px;
-            font-size: .75rem;
+        tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color 0.2s ease;
         }
 
-        .btn-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: .4rem;
-            padding: .75rem 1rem;
-            border-radius: .75rem;
-            background: #5b4cdb;
-            color: #fff;
-            font-size: .875rem;
+        .badge {
+            background: rgba(91, 76, 219, 0.09);
+            color: #5b4cdb;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 600;
-            border: none;
-            cursor: pointer;
-            width: 100%;
+            text-transform: uppercase;
+            display: inline-block;
         }
 
         .footer {
@@ -199,11 +290,6 @@
                 box-shadow: none;
                 padding: 0;
             }
-        }
-
-        tbody tr:hover {
-            background-color: #f8f9fa;
-            transition: background-color 0.2s ease;
         }
     </style>
 </head>
@@ -229,7 +315,6 @@
                 </form>
 
                 <a href="{% url 'create_bill' %}" class="nav-btn">📄 Create Bill</a>
-
                 {% else %}
                 <a href="{% url 'login' %}" class="nav-link">🔑 Login</a>
                 <a href="{% url 'register' %}" class="nav-link">📝 Register</a>
@@ -239,34 +324,18 @@
     </nav>
 
     <div class="main-wrap">
-        <div class="main-card">
-            {% block content %}{% endblock %}
-        </div>
+        {% block content %}{% endblock %}
     </div>
+
     <footer class="footer">© 2026 DistroLoom Business Suite</footer>
 
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
-                navigator.serviceWorker.register('/static/sw.js').then(function (registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, function (err) {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(reg => console.log('ServiceWorker tracking active:', reg.scope))
+                    .catch(err => console.log('ServiceWorker configuration failed:', err));
             });
-        }
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/static/sw.js');
-        }
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/static/serviceworker.js')
-                .then(function () {
-                    console.log("Service Worker Registered");
-                });
         }
     </script>
 </body>

@@ -1,85 +1,17 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
 from django.contrib import messages
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.forms import UserCreationForm
+from django.db.models import Sum, F
+from django.http import HttpResponse, JsonResponse
+from reportlab.pdfgen import canvas
 from .models import Product, Sale, SaleItem, Category
 from .forms import ProductForm
-from django.db.models import Sum, F
-from .models import Product, Sale, Category
-from django.contrib.auth.decorators import user_passes_test
-from django.shortcuts import render, redirect
-from django.db.models import Sum, F
-from django.contrib.auth.decorators import login_required
 
+# 1. DASHBOARD / INVENTORY LIST
 @login_required
-def inventory_list(request):
-    products = Product.objects.all()
-    # ... rest of your existing logic ...
-    return render(request, 'inventory/list_products.html', context)
-
-# Only allow the Superuser (Karmadip) to see this
-@user_passes_test(lambda u: u.is_superuser)
-def financial_report(request):
-    products = Product.objects.all()
-    total_revenue = Sale.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    total_value = products.aggregate(total=Sum(F('stock_quantity') * F('buying_price')))['total'] or 0
-    
-    total_profit = 0
-    sales = Sale.objects.prefetch_related('items__product').all()
-    for sale in sales:
-        for item in sale.items.all():
-            total_profit += (item.price_at_sale - item.product.buying_price) * item.quantity
-            
-    return render(request, 'inventory/financial_report.html', {
-        'products': products,
-        'total_revenue': total_revenue,
-        'total_value': total_value,
-        'total_profit': total_profit,
-        'total_items': products.count()
-    })
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib import messages
-
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}! You can now login.')
-            return redirect('login')
-    else:
-        form = UserCreationForm()
-    return render(request, 'registration/register.html', {'form': form})
-
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-
-@login_required
-def delete_product(request, pk):
-    # Only allow the Boss (Superuser) to delete records
-    if not request.user.is_superuser:
-        return redirect('inventory_list')
-        
-    product = get_object_or_404(Product, pk=pk)
-    product.delete()
-    return redirect('inventory_list')
-
-@login_required
-def delete_category(request, pk):
-    if not request.user.is_superuser:
-        return redirect('category_list')
-    category = get_object_or_404(Category, pk=pk)
-    category.delete()
-    return redirect('category_list')
-
-@login_required
-def delete_sale(request, pk):
-    if not request.user.is_superuser:
-        return redirect('sales_history')
-    sale = get_object_or_404(Sale, pk=pk)
-    sale.delete()
-    return redirect('sales_history')
-
 def inventory_list(request):
     products = Product.objects.all()
     low_stock = Product.objects.filter(stock_quantity__lt=10)
@@ -91,8 +23,7 @@ def inventory_list(request):
     
     total_sales_revenue = Sale.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     
-    # Calculate Total Profit from all Sales
-    # (Selling Price - Buying Price) * Quantity sold for every SaleItem
+    # Calculate Total Profit Dynamically
     total_profit = 0
     sales = Sale.objects.prefetch_related('items__product').all()
     for sale in sales:
@@ -110,34 +41,38 @@ def inventory_list(request):
     }
     return render(request, 'inventory/list_products.html', context)
 
- # inventory/views.py
+# 2. DYNAMIC REGISTRATION SYSTEM (Brings immediate session switch!)
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # MAGIC LINE: Logs in the new user right away & destroys previous cached user session
+            login(request, user)
+            messages.success(request, f'Account created successfully! Welcome {user.username}.')
+            return redirect('inventory_list')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
 
-# inventory/views.py
+# 3. SECURE CUSTOM LOGOUT BYPASS
+def custom_logout(request):
+    logout(request)
+    messages.info(request, "You have been logged out successfully.")
+    return redirect('login')
 
-from django.db.models import Sum, F
-from django.contrib.auth.decorators import user_passes_test
-
-# This 'decorator' ensures ONLY the superuser can enter this page
+# 4. FINANCIAL REPORT (Superuser Only)
 @user_passes_test(lambda u: u.is_superuser)
 def financial_report(request):
     products = Product.objects.all()
-    
-    # 1. Total value of what you currently have in the shop
-    total_value = products.aggregate(
-        total=Sum(F('stock_quantity') * F('buying_price'))
-    )['total'] or 0
-    
-    # 2. Total money collected from customers
+    total_value = products.aggregate(total=Sum(F('stock_quantity') * F('buying_price')))['total'] or 0
     total_revenue = Sale.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     
-    # 3. Calculate Profit: (Selling Price - Buying Price) * Quantity for every sale
     total_profit = 0
     sales = Sale.objects.prefetch_related('items__product').all()
     for sale in sales:
         for item in sale.items.all():
-            # Basic Math: Profit = (What you sold it for - What you bought it for) * How many
-            profit_on_item = (item.price_at_sale - item.product.buying_price) * item.quantity
-            total_profit += profit_on_item
+            total_profit += (item.price_at_sale - item.product.buying_price) * item.quantity
 
     context = {
         'products': products,
@@ -148,27 +83,8 @@ def financial_report(request):
     }
     return render(request, 'inventory/financial_report.html', context)
 
-def unlock_session(request):
-    if request.method == "POST":
-        request.session['profit_unlocked'] = True
-        return JsonResponse({'status': 'ok'})
-    return JsonResponse({'status': 'denied'}, status=403)
-def category_list(request):
-    categories = Category.objects.all()
-    return render(request, 'inventory/category_list.html', {'categories': categories})
-
-def add_category(request):
-    if request.method == "POST":
-        name = request.POST.get('category_name')
-        if name:
-            Category.objects.create(name=name)
-            return redirect('add_product')
-    return render(request, 'inventory/add_category.html')
-# inventory/views.py
-
-from .forms import ProductForm
-from .models import Product, Category
-
+# 5. ADD PRODUCT WITH AUTOMATIC MERGE LOGIC
+@login_required
 def add_product(request):
     products = Product.objects.all().order_by('name')
 
@@ -177,7 +93,6 @@ def add_product(request):
         if form.is_valid():
             p_name = form.cleaned_data['name']
             
-            # Smart logic: Update if name exists, create if it doesn't
             product, created = Product.objects.get_or_create(name=p_name, defaults={
                 'category': form.cleaned_data['category'],
                 'buying_price': form.cleaned_data['buying_price'],
@@ -186,17 +101,13 @@ def add_product(request):
             })
             
             if not created:
-                # If product already exists, we UPDATE the fields
                 product.category = form.cleaned_data['category']
-                
-                # Check if price changed
                 if product.buying_price != form.cleaned_data['buying_price'] or \
                    product.selling_price != form.cleaned_data['selling_price']:
                     product.buying_price = form.cleaned_data['buying_price']
                     product.selling_price = form.cleaned_data['selling_price']
                     messages.warning(request, f"Prices updated for {p_name}!")
                 
-                # Add new quantity to existing stock
                 product.stock_quantity += form.cleaned_data['stock_quantity']
                 product.save()
                 messages.success(request, f"Stock updated for {p_name}. New total: {product.stock_quantity}")
@@ -209,9 +120,11 @@ def add_product(request):
         
     return render(request, 'inventory/add_product.html', {
         'form': form,
-        'products': products # We pass the list of products for the selector
+        'products': products
     })
 
+# 6. BILLING SYSTEM / CART ROUTINES
+@login_required
 def create_bill(request):
     products = Product.objects.all()
     cart = request.session.get('cart', [])
@@ -244,7 +157,6 @@ def create_bill(request):
                 total = 0
                 for item in cart:
                     prod = Product.objects.get(id=item['id'])
-                    # Reduction of stock logic happens in SaleItem.save()
                     SaleItem.objects.create(
                         sale=new_sale, product=prod, 
                         quantity=item['qty'], price_at_sale=item['price']
@@ -260,41 +172,95 @@ def create_bill(request):
         'products': products, 'cart': cart, 'cart_total': sum(i['total'] for i in cart)
     })
 
+# 7. ADDITIONAL MANAGEMENT VIEWS
+@login_required
+def category_list(request):
+    categories = Category.objects.all()
+    return render(request, 'inventory/category_list.html', {'categories': categories})
+
+@login_required
+def add_category(request):
+    if request.method == "POST":
+        name = request.POST.get('category_name')
+        if name:
+            Category.objects.create(name=name)
+            return redirect('add_product')
+    return render(request, 'inventory/add_category.html')
+
+@login_required
 def sales_history(request):
     sales = Sale.objects.prefetch_related('items__product').all().order_by('-sale_date')
     return render(request, 'inventory/sales_history.html', {'sales': sales})
 
-
-from django.http import HttpResponse
-from reportlab.pdfgen import canvas
-from django.shortcuts import get_object_or_404
-
+# 8. NATIVE APP COMPATIBLE DOWNLOAD MANAGER (Bypasses Android Crashes)
 @login_required
 def download_bill(request, sale_id):
     sale = get_object_or_404(Sale, id=sale_id)
-
     response = HttpResponse(content_type='application/pdf')
-
-    # 🔥 THIS IS THE MAIN FIX
-    response['Content-Disposition'] = f'inline; filename="bill_{sale.id}.pdf"'
+    # Forces Android Downloader Layer directly inside APK bridges
+    response['Content-Disposition'] = f'attachment; filename="bill_{sale.id}.pdf"'
 
     p = canvas.Canvas(response)
-
-    # 🧾 Bill Design
     p.setFont("Helvetica", 12)
-
     p.drawString(50, 800, f"Bill ID: {sale.id}")
     p.drawString(50, 780, f"Customer: {sale.customer_name}")
     p.drawString(50, 760, f"Date: {sale.sale_date}")
 
     y = 720
-
     for item in sale.items.all():
         p.drawString(50, y, f"{item.product.name} - {item.quantity} x {item.price_at_sale}")
         y -= 20
 
     p.drawString(50, y - 20, f"Total Amount: {sale.total_amount}")
-
     p.save()
-
     return response
+
+# 9. UTILITY SESSION VIEWS
+@login_required
+def unlock_session(request):
+    if request.method == "POST":
+        request.session['profit_unlocked'] = True
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'denied'}, status=403)
+
+# 10. RECORD DELETION LOGIC (Superuser Guarded)
+@login_required
+def delete_product(request, pk):
+    if not request.user.is_superuser:
+        return redirect('inventory_list')
+    product = get_object_or_404(Product, pk=pk)
+    product.delete()
+    return redirect('inventory_list')
+
+@login_required
+def delete_category(request, pk):
+    if not request.user.is_superuser:
+        return redirect('category_list')
+    category = get_object_or_404(Category, pk=pk)
+    category.delete()
+    return redirect('category_list')
+
+@login_required
+def delete_sale(request, pk):
+    if not request.user.is_superuser:
+        return redirect('sales_history')
+    sale = get_object_or_404(Sale, pk=pk)
+    sale.delete()
+    return redirect('sales_history')
+
+
+# inventory/views.py
+
+@login_required
+def category_products(request, category_id):
+    # 1. Sahi category dhoondo ya 404 throw karo
+    category = get_object_or_404(Category, id=category_id)
+    
+    # 2. Sirf is category ke saare products nikaalo
+    products = Product.objects.filter(category=category).order_by('name')
+    
+    context = {
+        'category': category,
+        'products': products,
+    }
+    return render(request, 'inventory/category_products.html', context)

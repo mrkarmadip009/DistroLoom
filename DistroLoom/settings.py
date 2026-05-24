@@ -131,10 +131,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # DistroLoom/settings.py
 LOGIN_REDIRECT_URL = 'inventory_list'
-LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
+LOGOUT_REDIRECT_URL = 'login'
 # Where to go after login
 
 # Where to go after logout
 
 # This forces the user to the login page if they try to access the site root
+LOGOUT_ON_GET = True

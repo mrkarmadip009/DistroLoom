@@ -1,78 +1,291 @@
-{% extends 'inventory/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block content %}
-<div style="display:flex; align-items:center; gap:.75rem; margin-bottom:1.5rem;">
-    <div class="icon-box">🛒</div>
-    <h2 style="font-size:1.25rem; font-weight:700;">Create New Bill</h2>
-</div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>DistroLoom</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#181c24">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-    <div class="form-card" style="padding: 1.5rem;">
-        <h3 style="font-size:1rem; margin-bottom:1.5rem; color:#5b4cdb;">1. Add Items</h3>
-        <form method="POST" action="{% url 'create_bill' %}">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="add_to_cart">
+        /* Global Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-            <div class="form-group">
-                <label class="form-label">Select Product</label>
-                <select name="product" class="form-input">
-                    {% for p in products %}
-                    <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.stock_quantity }})</option>
-                    {% endfor %}
-                </select>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f2f3f7;
+            color: #181c24;
+            line-height: 1.5;
+        }
+
+        /* --- THE HOVER LIFT EFFECT --- */
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+            display: inline-block;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: #181c24;
+            color: #f2f3f7;
+            box-shadow: 0 2px 12px rgba(24, 28, 36, 0.15);
+        }
+
+        .nav-inner {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .4rem .75rem;
+            border-radius: .5rem;
+            font-size: .875rem;
+            font-weight: 500;
+            color: rgba(242, 243, 247, 0.6);
+            transition: all .2s;
+        }
+
+        .nav-link:hover {
+            color: #f2f3f7;
+            background: rgba(242, 243, 247, 0.1);
+        }
+
+        .nav-btn {
+            margin-left: .75rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .5rem 1rem;
+            border-radius: .75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: .875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Main Layout */
+        .main-wrap {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .main-card {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 1px 3px rgba(24, 28, 36, 0.04), 0 8px 24px rgba(24, 28, 36, 0.06);
+            border: 1px solid rgba(220, 222, 230, 0.6);
+            min-height: 60vh;
+        }
+
+        /* Form Grouping */
+        .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.6rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #5b4cdb;
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.1);
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.85rem;
+            border-radius: 0.75rem;
+            background: #5b4cdb;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+            font-size: .875rem;
+        }
+
+        @media print {
+
+            .navbar,
+            .footer,
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="/inventory/dashboard/" class="nav-logo">📦 DistroLoom</a>
+            <div class="nav-links">
+                <a href="/inventory/dashboard/" class="nav-link hover-lift">📦 Inventory</a>
+                <a href="/inventory/categories/" class="nav-link hover-lift">📂 Categories</a>
+                <a href="/inventory/sales/" class="nav-link hover-lift">📜 History</a>
+                <a href="/inventory/add/" class="nav-link hover-lift">➕ + Stock</a>
+                <form action="/inventory/logout/" method="post"
+                    style="display:inline; margin:0; padding:0; width:auto;">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="...">
+                    <button type="submit" class="nav-link hover-lift"
+                        style="background:none; border:none; cursor:pointer; font-family:inherit;">
+                        🚪 Logout
+                    </button>
+                </form>
+                <a href="/inventory/bill/" class="nav-btn hover-lift">📄 Create Bill</a>
             </div>
-
-            <div class="form-group">
-                <label class="form-label">Quantity</label>
-                <input type="number" name="quantity" value="1" min="1" class="form-input">
-            </div>
-
-            <button type="submit" class="btn-primary" style="width:100%;">➕ Add to Cart</button>
-        </form>
-    </div>
-
-    <div class="form-card" style="padding: 1.5rem;">
-        <h3 style="font-size:1rem; margin-bottom:1.5rem; color:#5b4cdb;">2. Your Cart</h3>
-
-        <div style="min-height: 150px;">
-            {% if not cart %}
-            <p style="text-align:center; color:#6b7280; margin-top:3rem;">Your cart is empty.</p>
-            {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th style="text-align:center;">Qty</th>
-                        <th style="text-align:right;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in cart %}
-                    <tr>
-                        <td>{{ item.name }}</td>
-                        <td style="text-align:center;">{{ item.qty }}</td>
-                        <td style="text-align:right;">₹{{ item.total }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <h4 style="text-align:right; margin-top:1.5rem; font-size:1.1rem;">Grand Total: ₹{{ cart_total }}</h4>
-            {% endif %}
         </div>
+    </nav>
 
-        <form method="POST" action="{% url 'create_bill' %}"
-            style="margin-top:2rem; border-top: 1px solid #eee; padding-top: 1.5rem;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="finalize_bill">
-
-            <div class="form-group">
-                <label class="form-label">Customer Name</label>
-                <input type="text" name="customer" required placeholder="Enter shopkeeper name" class="form-input">
+    <div class="main-wrap">
+        <div class="main-card">
+            <div style="display:flex; align-items:center; gap:.75rem; margin-bottom:1.5rem;">
+                <div class="icon-box" style="font-size: 1.5rem;">🛒</div>
+                <h2 style="font-size:1.25rem; font-weight:700;">Create New Bill</h2>
             </div>
 
-            <button type="submit" class="btn-primary" style="width:100%; background:#181c24;">✅ Save & Print
-                Bill</button>
-        </form>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="form-card hover-lift"
+                    style="padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 1rem; background: #fff;">
+                    <h3 style="font-size:1rem; margin-bottom:1.5rem; color:#5b4cdb; font-weight: 700;">1. Add Items</h3>
+                    <form method="POST">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="...">
+                        <input type="hidden" name="action" value="add_to_cart">
+
+                        <div class="form-group">
+                            <label>Select Product</label>
+                            <select name="product">
+                                <option value="1">jambu (Stock: 90)</option>
+                                <option value="2">bhutdo (Stock: 300)</option>
+                                <option value="3">patty khaja (Stock: 100)</option>
+                                <option value="4">container (Stock: 50)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" name="quantity" value="1" min="1">
+                        </div>
+
+                        <button type="submit" class="btn-primary hover-lift" style="width:100%;">➕ Add to Cart</button>
+                    </form>
+                </div>
+
+                <div class="form-card hover-lift"
+                    style="padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 1rem; background: #fff;">
+                    <h3 style="font-size:1rem; margin-bottom:1.5rem; color:#5b4cdb; font-weight: 700;">2. Your Cart</h3>
+
+                    <div style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                        <p style="text-align:center; color:#6b7280;">Your cart is empty.</p>
+                    </div>
+
+                    <form method="POST" style="margin-top:2rem; border-top: 1px solid #eee; padding-top: 1.5rem;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="...">
+                        <input type="hidden" name="action" value="finalize_bill">
+
+                        <div class="form-group">
+                            <label>Customer Name</label>
+                            <input type="text" name="customer" required placeholder="Enter shopkeeper name">
+                        </div>
+
+                        <button type="submit" class="btn-primary hover-lift" style="width:100%; background:#181c24;">
+                            ✅ Save & Print Bill
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
-{% endblock %}
+
+    <footer class="footer">© 2026 DistroLoom Business Suite</footer>
+</body>
+
+</html>
