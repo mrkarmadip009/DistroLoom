@@ -123,11 +123,36 @@ def add_product(request):
         'products': products
     })
 
-# 6. BILLING SYSTEM / CART ROUTINES
+# inventory/views.py
+from django.core.exceptions import ValidationError
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.db import transaction
+from .models import Product, Sale, SaleItem
+
 @login_required
 def create_bill(request):
-    products = Product.objects.all()
+    raw_products = Product.objects.all().order_by('name')
     cart = request.session.get('cart', [])
+    
+    # MAGIC LAYER: Dropdown ke stock ko cart ke items ke mutabik minus karo
+    products = []
+    for prod in raw_products:
+        # Check karo ki ye product cart mein hai kya?
+        cart_qty = 0
+        for item in cart:
+            if item['id'] == prod.id:
+                cart_qty = item['qty']
+                break
+        
+        # Virtual dictionary banao jisme available stock minus ho chuka ho
+        products.append({
+            'id': prod.id,
+            'name': prod.name,
+            'selling_price': prod.selling_price,
+            # Database stock minus current ongoing cart items session
+            'stock_quantity': prod.stock_quantity - cart_qty 
+        })
 
     if request.method == "POST":
         action = request.POST.get('action')
@@ -137,39 +162,76 @@ def create_bill(request):
             qty = int(request.POST.get('quantity'))
             prod = Product.objects.get(id=p_id)
             
-            if prod.stock_quantity >= qty:
-                cart.append({
-                    'id': prod.id, 'name': prod.name, 'qty': qty,
-                    'price': float(prod.selling_price), 'total': float(prod.selling_price * qty)
-                })
+            existing_cart_qty = 0
+            existing_item_index = -1
+            
+            for index, item in enumerate(cart):
+                if item['id'] == prod.id:
+                    existing_cart_qty = item['qty']
+                    existing_item_index = index
+                    break
+            
+            total_requested_qty = existing_cart_qty + qty
+            
+            if prod.stock_quantity >= total_requested_qty:
+                if existing_item_index != -1:
+                    cart[existing_item_index]['qty'] = total_requested_qty
+                    cart[existing_item_index]['total'] = float(prod.selling_price * total_requested_qty)
+                    messages.success(request, f"Updated '{prod.name}' quantity in cart to {total_requested_qty}.")
+                else:
+                    cart.append({
+                        'id': prod.id, 
+                        'name': prod.name, 
+                        'qty': qty,
+                        'price': float(prod.selling_price), 
+                        'total': float(prod.selling_price * qty)
+                    })
+                    messages.success(request, f"'{prod.name}' added to cart.")
+                
                 request.session['cart'] = cart
             else:
-                messages.error(request, f"Insufficient stock for {prod.name}")
+                available_left = prod.stock_quantity - existing_cart_qty
+                if existing_cart_qty > 0:
+                    messages.error(request, f"⚠️ Stock Limit Error: You already have {existing_cart_qty} of '{prod.name}' in cart. Max remaining you can add is {available_left}!")
+                else:
+                    messages.error(request, f"⚠️ Stock Limit Error: Only {prod.stock_quantity} items of '{prod.name}' available. You requested {qty}!")
+            
             return redirect('create_bill')
 
         elif action == "finalize_bill":
             customer = request.POST.get('customer')
             if not cart:
+                messages.warning(request, "Your cart is empty!")
                 return redirect('create_bill')
             
-            with transaction.atomic():
-                new_sale = Sale.objects.create(customer_name=customer)
-                total = 0
-                for item in cart:
-                    prod = Product.objects.get(id=item['id'])
-                    SaleItem.objects.create(
-                        sale=new_sale, product=prod, 
-                        quantity=item['qty'], price_at_sale=item['price']
-                    )
-                    total += item['total']
-                new_sale.total_amount = total
-                new_sale.save()
-            
-            request.session['cart'] = []
-            return redirect('sales_history')
+            try:
+                with transaction.atomic():
+                    new_sale = Sale.objects.create(customer_name=customer)
+                    total = 0
+                    for item in cart:
+                        prod = Product.objects.get(id=item['id'])
+                        SaleItem.objects.create(
+                            sale=new_sale, 
+                            product=prod, 
+                            quantity=item['qty'], 
+                            price_at_sale=item['price']
+                        )
+                        total += item['total']
+                    new_sale.total_amount = total
+                    new_sale.save()
+                
+                request.session['cart'] = []
+                messages.success(request, f"Bill saved successfully for {customer}!")
+                return redirect('sales_history')
+                
+            except ValidationError as e:
+                messages.error(request, f"⚠️ Transaction Declined: {e.messages[0]}")
+                return redirect('create_bill')
 
     return render(request, 'inventory/create_bill.html', {
-        'products': products, 'cart': cart, 'cart_total': sum(i['total'] for i in cart)
+        'products': products, 
+        'cart': cart, 
+        'cart_total': sum(i['total'] for i in cart)
     })
 
 # 7. ADDITIONAL MANAGEMENT VIEWS

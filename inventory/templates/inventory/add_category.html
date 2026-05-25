@@ -3,25 +3,140 @@
 {% block title %}Add Category - DistroLoom{% endblock %}
 
 {% block content %}
-<div style="display:flex;justify-content:center">
-    <div style="width:100%;max-width:28rem">
-        <div style="margin-bottom:1.5rem">
-            <div class="icon-box icon-box-lg" style="margin-bottom:1rem">📁</div>
-            <h2 style="font-size:1.5rem;font-weight:700">Add New Business Category</h2>
-            <p style="color:#6b7280;margin-top:.25rem;font-size:.875rem">Example: Tobacco, Sweets, Peanuts, etc.</p>
+<style>
+    /* Premium Category Specific UI Design Rules */
+    .center-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 65vh;
+        padding: 1rem;
+    }
+
+    .form-container-box {
+        width: 100%;
+        max-width: 30rem;
+    }
+
+    .header-banner {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .header-banner h2 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #181c24;
+        letter-spacing: -0.01em;
+    }
+
+    /* Fixed Premium Glassmorphism Card Wrapper */
+    .premium-form-card {
+        padding: 2.25rem;
+        border: 1px solid rgba(220, 222, 230, 0.6);
+        border-radius: 1.25rem;
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
+    }
+
+    .form-group-custom {
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group-custom label {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #344054;
+    }
+
+    /* REPAIRED INPUT TEXTBOX CSS WITH GLOW STATES */
+    .premium-input-field {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #d0d5dd;
+        background: #f8fafc;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: #181c24;
+        outline: none;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .premium-input-field:focus {
+        background: #ffffff;
+        border-color: #5b4cdb;
+        box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.12), 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+
+    .premium-input-field::placeholder {
+        color: #98a2b3;
+    }
+
+    /* Standard Core Actions Layer Components */
+    .btn-submit-premium {
+        width: 100%;
+        padding: 0.85rem;
+        background: #5b4cdb;
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(91, 76, 219, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .btn-submit-premium:hover {
+        background: #4a3bc4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(91, 76, 219, 0.35);
+    }
+
+    .back-navigation {
+        text-align: center;
+        margin-top: 1.75rem;
+    }
+
+    .back-link-custom {
+        color: #667085;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .back-link-custom:hover {
+        color: #181c24;
+    }
+</style>
+
+<div class="center-wrapper">
+    <div class="form-container-box">
+        <div class="header-banner">
+            <div style="margin-bottom: 0.75rem; font-size: 2.25rem;">📁</div>
+            <h2>Add New Business Category</h2>
+            <p style="color: #667085; margin-top: 0.35rem; font-size: 0.875rem;">Example: Tobacco, Sweets, Peanuts, Soda, etc.</p>
         </div>
 
-        <form class="form-card" method="POST" action="{% url 'add_category' %}">
+        <form class="premium-form-card" method="POST" action="{% url 'add_category' %}">
             {% csrf_token %}
-            <div class="form-group">
-                <label class="form-label">Category Name</label>
-                <input name="category_name" type="text" required placeholder="Enter category name..."
-                    class="form-input">
+            <div class="form-group-custom">
+                <label>Category Name</label>
+                <input name="category_name" type="text" required placeholder="Enter category name..." class="premium-input-field">
             </div>  
-            <button type="submit" class="btn-primary">Save Category</button>
+            <button type="submit" class="btn-submit-premium">Save Category</button>
         </form>
 
-        <a href="{% url 'add_product' %}" class="back-link">← Back to Product Form</a>
+        <div class="back-navigation">
+            <a href="{% url 'add_product' %}" class="back-link-custom">← Back to Product Form</a>
+        </div>
     </div>
 </div>
 {% endblock %}

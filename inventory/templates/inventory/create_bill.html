@@ -1,291 +1,296 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'inventory/base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>DistroLoom</title>
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#181c24">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162251.png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+{% block title %}DistroLoom | Create New Bill{% endblock %}
 
-        /* Global Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+{% block content %}
+<style>
+    /* Premium Grid & Card Layout Rules */
+    .dashboard-card {
+        background: #ffffff;
+        border-radius: 1.25rem;
+        padding: 2.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(220, 222, 230, 0.5);
+    }
+
+    .header-title-box {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .header-title-box h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #181c24;
+    }
+
+    .billing-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .billing-grid {
+            grid-template-columns: 1fr;
         }
+    }
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: #f2f3f7;
-            color: #181c24;
-            line-height: 1.5;
-        }
+    .billing-card {
+        padding: 2rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 1.25rem;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
+    }
 
-        /* --- THE HOVER LIFT EFFECT --- */
-        .hover-lift {
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
-            display: inline-block;
-        }
+    .card-heading {
+        font-size: 1.05rem;
+        margin-bottom: 1.75rem;
+        color: #5b4cdb;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.5rem;
+    }
 
-        .hover-lift:hover {
-            transform: translateY(-3px) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-        }
+    /* Repaired Forms Control Layer */
+    .form-group-custom {
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            font-family: 'Space Grotesk', sans-serif;
-        }
+    .form-group-custom label {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #344054;
+    }
 
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
+    .premium-field {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #d0d5dd;
+        background: #f8fafc;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: #181c24;
+        outline: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        /* Navbar */
-        .navbar {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: #181c24;
-            color: #f2f3f7;
-            box-shadow: 0 2px 12px rgba(24, 28, 36, 0.15);
-        }
+    .premium-field:focus {
+        background: #ffffff;
+        border-color: #5b4cdb;
+        box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.12);
+    }
 
-        .nav-inner {
-            max-width: 72rem;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-            height: 4rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+    /* QUICK ITEM SEARCH BAR INTERNAL STYLING */
+    .quick-search-wrapper {
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
 
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-            font-weight: 700;
-            font-size: 1.15rem;
-            letter-spacing: -0.02em;
-        }
+    .quick-search-input {
+        background: #ffffff;
+        border: 1px solid #5b4cdb40;
+        padding-left: 2.25rem;
+        font-size: 0.875rem;
+    }
 
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-        }
+    .quick-search-input:focus {
+        border-color: #5b4cdb;
+        box-shadow: 0 0 0 3px rgba(91, 76, 219, 0.15);
+    }
 
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .4rem .75rem;
-            border-radius: .5rem;
-            font-size: .875rem;
-            font-weight: 500;
-            color: rgba(242, 243, 247, 0.6);
-            transition: all .2s;
-        }
+    .search-inline-icon {
+        position: absolute;
+        left: 0.85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
 
-        .nav-link:hover {
-            color: #f2f3f7;
-            background: rgba(242, 243, 247, 0.1);
-        }
+    /* Cart Summary Table Layout */
+    .cart-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5rem;
+    }
 
-        .nav-btn {
-            margin-left: .75rem;
-            display: flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .5rem 1rem;
-            border-radius: .75rem;
-            background: #5b4cdb;
-            color: #fff;
-            font-size: .875rem;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-        }
+    .cart-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
 
-        /* Main Layout */
-        .main-wrap {
-            max-width: 72rem;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-        }
+    .cart-table td {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+        color: #334155;
+    }
 
-        .main-card {
-            background: #fff;
-            border-radius: 1rem;
-            padding: 2.5rem;
-            box-shadow: 0 1px 3px rgba(24, 28, 36, 0.04), 0 8px 24px rgba(24, 28, 36, 0.06);
-            border: 1px solid rgba(220, 222, 230, 0.6);
-            min-height: 60vh;
-        }
+    .total-pill-box {
+        background: #f0fdf4;
+        border: 1px dashed #22c55e;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+        color: #166534;
+    }
 
-        /* Form Grouping */
-        .form-group {
-            margin-bottom: 1.25rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
+    /* Core Action Component Layer */
+    .btn-action-dark {
+        background: #181c24 !important;
+    }
 
-        label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #374151;
-        }
+    .btn-action-dark:hover {
+        background: #2c323f !important;
+        box-shadow: 0 4px 12px rgba(24, 28, 36, 0.25) !important;
+    }
+</style>
 
-        input,
-        select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 0.6rem;
-            border: 1px solid #d1d5db;
-            background-color: #f9fafb;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.95rem;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        input:focus,
-        select:focus {
-            border-color: #5b4cdb;
-            background-color: #fff;
-            box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.1);
-        }
-
-        .btn-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.85rem;
-            border-radius: 0.75rem;
-            background: #5b4cdb;
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 2rem;
-            color: #6b7280;
-            font-size: .875rem;
-        }
-
-        @media print {
-
-            .navbar,
-            .footer,
-            .no-print {
-                display: none !important;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <nav class="navbar">
-        <div class="nav-inner">
-            <a href="/inventory/dashboard/" class="nav-logo">📦 DistroLoom</a>
-            <div class="nav-links">
-                <a href="/inventory/dashboard/" class="nav-link hover-lift">📦 Inventory</a>
-                <a href="/inventory/categories/" class="nav-link hover-lift">📂 Categories</a>
-                <a href="/inventory/sales/" class="nav-link hover-lift">📜 History</a>
-                <a href="/inventory/add/" class="nav-link hover-lift">➕ + Stock</a>
-                <form action="/inventory/logout/" method="post"
-                    style="display:inline; margin:0; padding:0; width:auto;">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="...">
-                    <button type="submit" class="nav-link hover-lift"
-                        style="background:none; border:none; cursor:pointer; font-family:inherit;">
-                        🚪 Logout
-                    </button>
-                </form>
-                <a href="/inventory/bill/" class="nav-btn hover-lift">📄 Create Bill</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="main-wrap">
-        <div class="main-card">
-            <div style="display:flex; align-items:center; gap:.75rem; margin-bottom:1.5rem;">
-                <div class="icon-box" style="font-size: 1.5rem;">🛒</div>
-                <h2 style="font-size:1.25rem; font-weight:700;">Create New Bill</h2>
-            </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div class="form-card hover-lift"
-                    style="padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 1rem; background: #fff;">
-                    <h3 style="font-size:1rem; margin-bottom:1.5rem; color:#5b4cdb; font-weight: 700;">1. Add Items</h3>
-                    <form method="POST">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="...">
-                        <input type="hidden" name="action" value="add_to_cart">
-
-                        <div class="form-group">
-                            <label>Select Product</label>
-                            <select name="product">
-                                <option value="1">jambu (Stock: 90)</option>
-                                <option value="2">bhutdo (Stock: 300)</option>
-                                <option value="3">patty khaja (Stock: 100)</option>
-                                <option value="4">container (Stock: 50)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Quantity</label>
-                            <input type="number" name="quantity" value="1" min="1">
-                        </div>
-
-                        <button type="submit" class="btn-primary hover-lift" style="width:100%;">➕ Add to Cart</button>
-                    </form>
-                </div>
-
-                <div class="form-card hover-lift"
-                    style="padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 1rem; background: #fff;">
-                    <h3 style="font-size:1rem; margin-bottom:1.5rem; color:#5b4cdb; font-weight: 700;">2. Your Cart</h3>
-
-                    <div style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
-                        <p style="text-align:center; color:#6b7280;">Your cart is empty.</p>
-                    </div>
-
-                    <form method="POST" style="margin-top:2rem; border-top: 1px solid #eee; padding-top: 1.5rem;">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="...">
-                        <input type="hidden" name="action" value="finalize_bill">
-
-                        <div class="form-group">
-                            <label>Customer Name</label>
-                            <input type="text" name="customer" required placeholder="Enter shopkeeper name">
-                        </div>
-
-                        <button type="submit" class="btn-primary hover-lift" style="width:100%; background:#181c24;">
-                            ✅ Save & Print Bill
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+<div class="dashboard-card">
+    <div class="header-title-box">
+        <div style="font-size: 1.5rem;">🛒</div>
+        <h2>Create New Bill</h2>
     </div>
 
-    <footer class="footer">© 2026 DistroLoom Business Suite</footer>
-</body>
+    <div class="billing-grid">
+        <div class="billing-card">
+            <h3 class="card-heading">1. Add Items</h3>
+            <form method="POST" action="{% url 'create_bill' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_to_cart">
 
-</html>
+                <div class="form-group-custom">
+                    <label>Quick Search Product</label>
+                    <div class="quick-search-wrapper">
+                        <span class="search-inline-icon">🔍</span>
+                        <input type="text" id="billProductSearch" placeholder="Type name to filter..."
+                            class="premium-field quick-search-input">
+                    </div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label>Select Product</label>
+                    <select name="product" id="billProductDropdown" class="premium-field"
+                        style="background-color: #fff;">
+                        {% for prod in products %}
+                        <option value="{{ prod.id }}">{{ prod.name }} (Stock: {{ prod.stock_quantity }})</option>
+                        {% empty %}
+                        <option value="">No products available</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group-custom">
+                    <label>Quantity</label>
+                    <input type="number" name="quantity" value="1" min="1" class="premium-field">
+                </div>
+
+                <button type="submit" class="btn-primary" style="width:100%; margin-top: 0.5rem;">➕ Add to Cart</button>
+            </form>
+        </div>
+
+        <div class="billing-card">
+            <h3 class="card-heading" style="color: #181c24;">2. Your Cart</h3>
+
+            {% if cart %}
+            <div style="overflow-x: auto; margin-bottom: 1rem;">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th style="text-align: center;">Qty</th>
+                            <th style="text-align: right;">Price</th>
+                            <th style="text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart %}
+                        <tr>
+                            <td><strong>{{ item.name }}</strong></td>
+                            <td style="text-align: center;">{{ item.qty }}</td>
+                            <td style="text-align: right;">₹{{ item.price }}</td>
+                            <td style="text-align: right;" class="font-semibold">₹{{ item.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="total-pill-box">
+                <span>Grand Total:</span>
+                <span style="font-size: 1.15rem;">₹{{ cart_total }}</span>
+            </div>
+            {% else %}
+            <div
+                style="min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; color:#64748b;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛍️</div>
+                <p style="text-align:center;">Your cart is empty.</p>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'create_bill' %}"
+                style="margin-top: 1rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="finalize_bill">
+
+                <div class="form-group-custom">
+                    <label>Customer Name</label>
+                    <input type="text" name="customer" required placeholder="Enter customer name..."
+                        class="premium-field">
+                </div>
+
+                <button type="submit" class="btn-primary btn-action-dark" style="width:100%;" {% if not cart %}disabled
+                    style="opacity: 0.5; cursor: not-allowed;" {% endif %}>
+                    ✅ Save & Finalize Bill
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('billProductSearch').addEventListener('keyup', function () {
+        let filter = this.value.toLowerCase();
+        let dropdown = document.getElementById('billProductDropdown');
+        let options = dropdown.options;
+        let firstVisible = null;
+
+        for (let i = 0; i < options.length; i++) {
+            let text = options[i].text.toLowerCase();
+            if (text.includes(filter)) {
+                options[i].style.display = ""; // Option show karo
+                if (!firstVisible) {
+                    firstVisible = options[i]; // Pehla match hone waala item select karne ke liye track karo
+                }
+            } else {
+                options[i].style.display = "none"; // Option hide karo
+            }
+        }
+
+        // Auto select the first matching element so biller can instantly press 'Enter'
+        if (firstVisible) {
+            dropdown.value = firstVisible.value;
+        }
+    });
+</script>
+{% endblock %}

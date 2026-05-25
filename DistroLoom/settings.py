@@ -139,3 +139,15 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # This forces the user to the login page if they try to access the site root
 LOGOUT_ON_GET = True
+
+
+# DistroLoom/settings.py (At the very bottom)
+
+# 1. Server stop hote hi session expire karne ke liye (RAM Memory Cache storage system)
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+
+# 2. Browser ka tab ya window close karte hi automatic logout karne ke liye
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# 3. Security layer: 30 minutes tak agar koi activity na ho toh automatic logout (Optional/Safe time in seconds)
+SESSION_COOKIE_AGE = 1800
