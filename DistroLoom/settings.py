@@ -151,3 +151,9 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # 3. Security layer: 30 minutes tak agar koi activity na ho toh automatic logout (Optional/Safe time in seconds)
 SESSION_COOKIE_AGE = 1800
+
+
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

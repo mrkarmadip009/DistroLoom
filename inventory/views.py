@@ -1,3 +1,4 @@
+# inventory/views.py (Full Application Logic Component)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
 from django.contrib import messages
@@ -6,15 +7,23 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Sum, F
 from django.http import HttpResponse, JsonResponse
+from django.core.exceptions import ValidationError
 from reportlab.pdfgen import canvas
 from .models import Product, Sale, SaleItem, Category
 from .forms import ProductForm
 
 # 1. DASHBOARD / INVENTORY LIST
+# inventory/views.py ke andar inventory_list function ko isse replace karo:
+
 @login_required
 def inventory_list(request):
+    """Main Inventory Dashboard displaying products, processing interactive real-time sidebar carts."""
     products = Product.objects.all()
     low_stock = Product.objects.filter(stock_quantity__lt=10)
+    
+    # 1. RETRIEVE ONGOING CART SESSIONS FOR SIDEBAR DRAWER LAYOUT
+    cart = request.session.get('cart', [])
+    cart_total = sum(float(item['total']) for item in cart)
     
     # Calculate Total Business Stats
     total_inventory_value = products.aggregate(
@@ -31,6 +40,7 @@ def inventory_list(request):
             profit = (item.price_at_sale - item.product.buying_price) * item.quantity
             total_profit += profit
 
+    # 2. INJECT 'cart' and 'cart_total' INSIDE CONTEXT LAYER
     context = {
         'products': products,
         'low_stock': low_stock,
@@ -38,16 +48,16 @@ def inventory_list(request):
         'total_revenue': total_sales_revenue,
         'total_profit': total_profit,
         'total_items': products.count(),
+        'cart': cart,              # Pass cart session list to template drawer
+        'cart_total': cart_total,  # Pass sum total for pricing labels
     }
     return render(request, 'inventory/list_products.html', context)
-
-# 2. DYNAMIC REGISTRATION SYSTEM (Brings immediate session switch!)
+# 2. DYNAMIC REGISTRATION SYSTEM
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # MAGIC LINE: Logs in the new user right away & destroys previous cached user session
             login(request, user)
             messages.success(request, f'Account created successfully! Welcome {user.username}.')
             return redirect('inventory_list')
@@ -83,13 +93,14 @@ def financial_report(request):
     }
     return render(request, 'inventory/financial_report.html', context)
 
-# 5. ADD PRODUCT WITH AUTOMATIC MERGE LOGIC
+# 5. UPGRADED ADD PRODUCT (With Media and Description Dynamic Overwrites)
 @login_required
 def add_product(request):
     products = Product.objects.all().order_by('name')
 
     if request.method == "POST":
-        form = ProductForm(request.POST)
+        # FIXED: Added request.FILES to enable media stream streaming uploading
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             p_name = form.cleaned_data['name']
             
@@ -98,10 +109,18 @@ def add_product(request):
                 'buying_price': form.cleaned_data['buying_price'],
                 'selling_price': form.cleaned_data['selling_price'],
                 'stock_quantity': form.cleaned_data['stock_quantity'],
+                'description': form.cleaned_data.get('description', ''),
+                'image': form.cleaned_data.get('image', None),
             })
             
             if not created:
                 product.category = form.cleaned_data['category']
+                product.description = form.cleaned_data.get('description', product.description)
+                
+                # Check for dynamic image update overwrite
+                if 'image' in request.FILES:
+                    product.image = request.FILES['image']
+                    
                 if product.buying_price != form.cleaned_data['buying_price'] or \
                    product.selling_price != form.cleaned_data['selling_price']:
                     product.buying_price = form.cleaned_data['buying_price']
@@ -112,7 +131,7 @@ def add_product(request):
                 product.save()
                 messages.success(request, f"Stock updated for {p_name}. New total: {product.stock_quantity}")
             else:
-                messages.success(request, f"New product created: {p_name}")
+                messages.success(request, f"New product deployed to digital store shelf: {p_name}")
 
             return redirect('inventory_list')
     else:
@@ -123,34 +142,24 @@ def add_product(request):
         'products': products
     })
 
-# inventory/views.py
-from django.core.exceptions import ValidationError
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.db import transaction
-from .models import Product, Sale, SaleItem
-
+# 6. DYNAMIC CREATION BILLING ENGINE WITH IN-CART OFFSET COUNTERS
 @login_required
 def create_bill(request):
     raw_products = Product.objects.all().order_by('name')
     cart = request.session.get('cart', [])
     
-    # MAGIC LAYER: Dropdown ke stock ko cart ke items ke mutabik minus karo
     products = []
     for prod in raw_products:
-        # Check karo ki ye product cart mein hai kya?
         cart_qty = 0
         for item in cart:
             if item['id'] == prod.id:
                 cart_qty = item['qty']
                 break
         
-        # Virtual dictionary banao jisme available stock minus ho chuka ho
         products.append({
             'id': prod.id,
             'name': prod.name,
             'selling_price': prod.selling_price,
-            # Database stock minus current ongoing cart items session
             'stock_quantity': prod.stock_quantity - cart_qty 
         })
 
@@ -245,7 +254,7 @@ def add_category(request):
     if request.method == "POST":
         name = request.POST.get('category_name')
         if name:
-            Category.objects.create(name=name)
+            Category.objects.get_or_create(name=name.strip())
             return redirect('add_product')
     return render(request, 'inventory/add_category.html')
 
@@ -254,12 +263,11 @@ def sales_history(request):
     sales = Sale.objects.prefetch_related('items__product').all().order_by('-sale_date')
     return render(request, 'inventory/sales_history.html', {'sales': sales})
 
-# 8. NATIVE APP COMPATIBLE DOWNLOAD MANAGER (Bypasses Android Crashes)
+# 8. NATIVE COMPATIBLE DOWNLOAD MANAGER
 @login_required
 def download_bill(request, sale_id):
     sale = get_object_or_404(Sale, id=sale_id)
     response = HttpResponse(content_type='application/pdf')
-    # Forces Android Downloader Layer directly inside APK bridges
     response['Content-Disposition'] = f'attachment; filename="bill_{sale.id}.pdf"'
 
     p = canvas.Canvas(response)
@@ -310,19 +318,83 @@ def delete_sale(request, pk):
     sale.delete()
     return redirect('sales_history')
 
-
-# inventory/views.py
-
+# 11. CATEGORY FILTER VIEW
 @login_required
 def category_products(request, category_id):
-    # 1. Sahi category dhoondo ya 404 throw karo
     category = get_object_or_404(Category, id=category_id)
-    
-    # 2. Sirf is category ke saare products nikaalo
     products = Product.objects.filter(category=category).order_by('name')
-    
     context = {
         'category': category,
         'products': products,
     }
     return render(request, 'inventory/category_products.html', context)
+
+# 12. NEW CUSTOMER-FACING INTERACTIVE STOREFRONT VIEW
+@login_required
+def storefront_view(request):
+    """Blinkit Grid display filtering active product media items."""
+    products = Product.objects.filter(is_active=True).order_by('name')
+    return render(request, 'inventory/storefront.html', {'products': products})
+
+
+
+    # inventory/views.py ke bilkul bottom par paste karo:
+# inventory/views.py ke andar add_to_cart_fast ko replace karo aur remove_from_cart ko uske neeche jod do:
+
+@login_required
+def add_to_cart_fast(request, product_id):
+    """Dynamic bulk and retail quantity collector updating active session dictionary vectors."""
+    prod = get_object_or_404(Product, id=product_id)
+    cart = request.session.get('cart', [])
+    
+    # Custom post data validation layer (Agar direct input se dynamic quantity aati h to use pakdo)
+    qty_to_add = int(request.POST.get('bulk_qty', 1))
+    if qty_to_add < 1:
+        qty_to_add = 1
+        
+    existing_cart_qty = 0
+    existing_item_index = -1
+    
+    for index, item in enumerate(cart):
+        if item['id'] == prod.id:
+            existing_cart_qty = item['qty']
+            existing_item_index = index
+            break
+            
+    total_requested_qty = existing_cart_qty + qty_to_add
+    
+    if prod.stock_quantity >= total_requested_qty:
+        if existing_item_index != -1:
+            cart[existing_item_index]['qty'] = total_requested_qty
+            cart[existing_item_index]['total'] = float(prod.selling_price * total_requested_qty)
+        else:
+            cart.append({
+                'id': prod.id,
+                'name': prod.name,
+                'qty': qty_to_add,
+                'price': float(prod.selling_price),
+                'total': float(prod.selling_price * qty_to_add)
+            })
+        request.session['cart'] = cart
+        messages.success(request, f"⚡ '{prod.name}' ({qty_to_add} Units) added directly into your billing layer!")
+    else:
+        available_left = prod.stock_quantity - existing_cart_qty
+        if existing_cart_qty > 0:
+            messages.error(request, f"⚠️ Stock Exhausted: You already have {existing_cart_qty} in cart. Max remaining you can add is {available_left}!")
+        else:
+            messages.error(request, f"⚠️ Stock Exhausted: Only {prod.stock_quantity} available. You requested {qty_to_add}!")
+            
+    # Redirect smoothly back to inventory interface panel
+    return redirect('inventory_list')
+
+@login_required
+def remove_from_cart(request, product_id):
+    """Wipes out targeted item instances inside ongoing checkout session maps."""
+    cart = request.session.get('cart', [])
+    
+    # Re-filtering list excluding current matched item array parameters
+    updated_cart = [item for item in cart if item['id'] != product_id]
+    
+    request.session['cart'] = updated_cart
+    messages.warning(request, "🗑️ Item removed successfully from active billing bucket.")
+    return redirect('inventory_list')

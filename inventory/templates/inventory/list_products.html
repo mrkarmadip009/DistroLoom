@@ -4,17 +4,15 @@
 
 {% block content %}
 <style>
-    /* Premium Dashboard Specific Custom CSS */
+    /* Core Content Containers Configuration */
     .dashboard-card {
         background: #ffffff;
         border-radius: 1.25rem;
         padding: 2.25rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
         border: 1px solid rgba(220, 222, 230, 0.5);
-        transition: all 0.3s ease;
     }
 
-    /* FIXED FLEXBOX DISTRIBUTION FOR ADMIN LAYOUT */
     .flex-header {
         display: flex;
         justify-content: space-between;
@@ -22,26 +20,20 @@
         margin-bottom: 2rem;
         gap: 1.5rem;
         flex-wrap: wrap;
-        /* Triggers safe wrap on smaller viewports */
     }
 
     .header-title {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        flex-shrink: 0;
     }
 
     .header-title h2 {
         font-size: 1.4rem;
         font-weight: 700;
         color: #181c24;
-        letter-spacing: -0.01em;
-        white-space: nowrap;
-        /* Prevents text from splitting into two lines */
     }
 
-    /* Fixed Button Layout for Admin */
     .btn-finance {
         background: #181c24;
         color: #fff;
@@ -49,25 +41,17 @@
         padding: 0.65rem 1.25rem;
         border-radius: 0.5rem;
         font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        box-shadow: 0 2px 5px rgba(24, 28, 36, 0.15);
-        transition: all 0.2s ease;
         text-decoration: none;
-        flex-shrink: 0;
     }
 
     .btn-finance:hover {
         background: #2c323f;
         transform: translateY(-1px);
-        box-shadow: 0 4px 10px rgba(24, 28, 36, 0.25);
     }
 
-    /* Upgraded Modern Search Box */
     .search-wrapper {
         position: relative;
-        margin-bottom: 1.75rem;
+        margin-bottom: 2.25rem;
         max-width: 450px;
     }
 
@@ -78,15 +62,12 @@
         border: 1px solid #e2e8f0;
         background: #f8fafc;
         font-size: 0.9rem;
-        font-family: inherit;
-        color: #181c24;
         outline: none;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .search-wrapper input:focus {
-        background: #ffffff;
         border-color: #5b4cdb;
+        background: #ffffff;
         box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.12);
     }
 
@@ -96,114 +77,310 @@
         top: 50%;
         transform: translateY(-50%);
         color: #94a3b8;
-        font-size: 0.95rem;
-        pointer-events: none;
     }
 
-    /* Table UI Enhancement */
-    .table-container {
-        overflow-x: auto;
-        border-radius: 0.85rem;
+    /* GRID ARCHITECTURE FOR PRODUCT CARDS */
+    .inventory-grid-system {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.75rem;
+    }
+
+    .instamart-item-card {
+        background: #ffffff;
         border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
+        border-radius: 1.25rem;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: all 0.3s ease;
     }
 
-    .custom-table {
+    .instamart-item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-photo-frame {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
+        height: 200px;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        position: relative;
     }
 
-    .custom-table th {
-        background: #181c24;
-        color: #f8fafc;
-        text-align: left;
-        padding: 1rem 1.25rem;
-        font-size: 0.75rem;
+    .card-photo-frame img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .floating-category-badge {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        background: rgba(24, 28, 36, 0.85);
+        color: #ffffff;
+        padding: 0.25rem 0.6rem;
+        border-radius: 0.5rem;
+        font-size: 0.7rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
     }
 
-    .custom-table td {
-        padding: 1.1rem 1.25rem;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 0.92rem;
-        color: #334155;
-        vertical-align: middle;
-    }
-
-    .custom-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .custom-table tbody tr {
-        transition: background-color 0.2s ease;
-    }
-
-    .custom-table tbody tr:hover {
-        background-color: #f8fafc !important;
-    }
-
-    /* Status & Badge Utilities */
-    .badge-category {
-        background: rgba(91, 76, 219, 0.08);
-        color: #5b4cdb;
-        padding: 0.3rem 0.75rem;
-        border-radius: 2rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-        display: inline-block;
-    }
-
-    .stock-indicator {
-        font-weight: 600;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.35rem;
-    }
-
-    .stock-low {
-        color: #ef4444;
+    .floating-delete-btn {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
         background: #fef2f2;
-    }
-
-    .stock-normal {
-        color: #0f766e;
-        background: #f0fdfa;
-    }
-
-    .action-text {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: #94a3b8;
-        background: #f1f5f9;
-        padding: 0.35rem 0.75rem;
-        border-radius: 0.5rem;
-        display: inline-block;
-    }
-
-    .btn-delete {
         color: #ef4444;
-        font-size: 1.15rem;
-        padding: 0.4rem 0.6rem;
-        border-radius: 0.5rem;
-        background: #fef2f2;
-        transition: all 0.2s ease;
-        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
         align-items: center;
+        justify-content: center;
         text-decoration: none;
     }
 
-    .btn-delete:hover {
-        background: #fee2e2;
-        transform: scale(1.08);
+    .card-content-block {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
     }
 
-    .price-tag {
+    .card-item-name {
+        font-size: 1rem;
         font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.35rem;
+    }
+
+    .card-item-desc {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-bottom: 1rem;
+        height: 36px;
+        overflow: hidden;
+    }
+
+    .card-meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.75rem;
+        border-top: 1px dashed #f1f5f9;
+        margin-bottom: 1rem;
+    }
+
+    .card-price-label {
+        font-size: 1.15rem;
+        font-weight: 800;
         color: #0f172a;
+    }
+
+    .stock-pill {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.25rem 0.55rem;
+        border-radius: 2rem;
+    }
+
+    .stock-pill-low {
+        color: #ef4444;
+        background: #fef2f2;
+    }
+
+    .stock-pill-normal {
+        color: #16a34a;
+        background: #f0fdf4;
+    }
+
+    /* ACTION INJECTION CONTROLS CONTAINER */
+    .fast-action-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .qty-input-row {
+        display: flex;
+        gap: 0.4rem;
+        width: 100%;
+    }
+
+    .bulk-qty-field {
+        width: 70px;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-align: center;
+        outline: none;
+    }
+
+    .btn-fast-cart {
+        background: #5b4cdb;
+        color: white;
+        border: none;
+        flex-grow: 1;
+        padding: 0.55rem 0;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .btn-fast-cart:hover {
+        background: #4a3bc4;
+    }
+
+    /* FLOATING CART FLOATER CONTROLLER */
+    .floating-instamart-pill {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: #181c24;
+        color: #ffffff;
+        padding: 1rem 1.5rem;
+        border-radius: 3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        z-index: 100;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .floating-instamart-pill:hover {
+        transform: scale(1.05);
+        background: #222834;
+    }
+
+    .cart-count-badge {
+        background: #5b4cdb;
+        color: #ffffff;
+        padding: 0.2rem 0.6rem;
+        border-radius: 2rem;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+
+    /* DYNAMIC SLIDE-OUT SIDEBAR DRAWER LAYOUT */
+    .sidebar-drawer-canvas {
+        position: fixed;
+        top: 0;
+        right: -420px;
+        width: 400px;
+        height: 100vh;
+        background: #ffffff;
+        box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 1px solid #e2e8f0;
+    }
+
+    .sidebar-drawer-canvas.active {
+        right: 0;
+    }
+
+    .drawer-overlay-shield {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 150;
+        display: none;
+        backdrop-filter: blur(4px);
+    }
+
+    .drawer-overlay-shield.active {
+        display: block;
+    }
+
+    .drawer-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8fafc;
+    }
+
+    .drawer-header h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #181c24;
+    }
+
+    .close-drawer-trigger {
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #94a3b8;
+        transition: color 0.2s;
+    }
+
+    .close-drawer-trigger:hover {
+        color: #181c24;
+    }
+
+    .drawer-body-items {
+        padding: 1.5rem;
+        flex-grow: 1;
+        overflow-y: auto;
+    }
+
+    .mini-cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .mini-delete-item-link {
+        color: #ef4444;
+        text-decoration: none;
+        font-size: 0.95rem;
+        margin-left: 0.75rem;
+        padding: 0.25rem 0.4rem;
+        background: #fef2f2;
+        border-radius: 0.35rem;
+    }
+
+    .mini-delete-item-link:hover {
+        background: #fee2e2;
+    }
+
+    .drawer-footer-checkout {
+        padding: 1.5rem;
+        border-top: 1px solid #f1f5f9;
+        background: #f8fafc;
+    }
+
+    .drawer-grand-total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: #111827;
+        margin-bottom: 1.25rem;
     }
 </style>
 
@@ -211,12 +388,10 @@
     <div class="flex-header">
         <div class="header-title">
             <span>📦</span>
-            <h2>Current Inventory Details</h2>
+            <h2>Current Inventory Showcase</h2>
         </div>
         {% if user.is_superuser %}
-        <a href="{% url 'financial_report' %}" class="btn-finance">
-            📊 View Financial Report
-        </a>
+        <a href="{% url 'financial_report' %}" class="btn-finance">📊 View Financial Report</a>
         {% endif %}
     </div>
 
@@ -225,68 +400,156 @@
         <input type="text" id="inventorySearch" placeholder="Search product name or category...">
     </div>
 
-    <div class="table-container">
-        <table id="inventoryTable" class="custom-table">
-            <thead>
-                <tr>
-                    <th>Item Name</th>
-                    <th>Category</th>
-                    <th class="text-center">Stock</th>
-                    <th class="text-right">Selling Price</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr>
-                    <td><strong>{{ product.name }}</strong></td>
-                    <td><span class="badge-category">{{ product.category.name }}</span></td>
-                    <td class="text-center">
-                        {% if product.stock_quantity < 10 %} <span class="stock-indicator stock-low"
-                            style="font-weight: 700;">
-                            {{ product.stock_quantity }} <span
-                                style="font-size: 11px; text-transform: uppercase; margin-left: 2px;">⚠️ Low</span>
-                            </span>
-                            {% else %}
-                            <span class="stock-indicator stock-normal">{{ product.stock_quantity }}</span>
-                            {% endif %}
-                    </td>
-                    <td class="text-right price-tag">₹{{ product.selling_price }}</td>
-                    <td class="text-center">
-                        {% if user.is_superuser %}
-                        <a href="{% url 'delete_product' product.pk %}"
-                            onclick="return confirm('Karmadip, are you sure you want to delete {{ product.name }}? This cannot be undone.')"
-                            class="btn-delete">
-                            🗑️
-                        </a>
+    <div class="inventory-grid-system" id="inventoryGrid">
+        {% for product in products %}
+        <div class="instamart-item-card"
+            data-search-content="{{ product.name|lower }} {{ product.category.name|lower }}">
+            <div class="card-photo-frame">
+                <span class="floating-category-badge">{{ product.category.name }}</span>
+                {% if user.is_superuser %}
+                <a href="{% url 'delete_product' product.pk %}"
+                    onclick="return confirm('Karmadip, are you sure you want to delete {{ product.name }}?')"
+                    class="floating-delete-btn">🗑️</a>
+                {% endif %}
+
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% else %}
+                <img src="https://cdn-icons-png.flaticon.com/512/1162/1162251.png" alt="default"
+                    style="opacity: 0.2; max-width: 60px;">
+                {% endif %}
+            </div>
+
+            <div class="card-content-block">
+                <h3 class="card-item-name">{{ product.name }}</h3>
+                <p class="card-item-desc">{% if product.description %}{{ product.description }}{% else %}No description
+                    configured.{% endif %}</p>
+
+                <div class="card-meta-row">
+                    <span class="card-price-label">₹{{ product.selling_price }}</span>
+                    {% if product.stock_quantity < 10 %} <span class="stock-pill stock-pill-low">Qty: {{
+                        product.stock_quantity }} ⚠️ Low</span>
                         {% else %}
-                        <span class="action-text">No Access</span>
+                        <span class="stock-pill stock-pill-normal">Qty: {{ product.stock_quantity }}</span>
                         {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center" style="color: #64748b; padding: 3rem 0;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
-                        No products available in inventory. Click "+ Add Stock" to begin.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </div>
+
+                <div class="fast-action-wrapper">
+                    {% if product.stock_quantity > 0 %}
+                    <form method="POST" action="{% url 'add_to_cart_fast' product.id %}" class="qty-input-row">
+                        {% csrf_token %}
+                        <input type="number" name="bulk_qty" value="1" min="1" max="{{ product.stock_quantity }}"
+                            class="bulk-qty-field">
+                        <button type="submit" class="btn-fast-cart">🛒 + Add</button>
+                    </form>
+                    {% else %}
+                    <button class="btn-fast-cart" style="background:#f1f5f9; color:#94a3b8; cursor:not-allowed;"
+                        disabled>Out of Stock</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
+<div class="floating-instamart-pill" id="openCartDrawerBtn">
+    <span>🛍️ View Added Order</span>
+    <span class="cart-count-badge" id="cartCountIndicator">{{ cart|length }}</span>
+</div>
+
+<div class="drawer-overlay-shield" id="drawerOverlay"></div>
+
+<div class="sidebar-drawer-canvas" id="cartSidebarDrawer">
+    <div class="drawer-header">
+        <h3>⚡ Live Checkout Basket</h3>
+        <span class="close-drawer-trigger" id="closeCartDrawerBtn">&times;</span>
+    </div>
+
+    <div class="drawer-body-items">
+        {% if cart %}
+        {% for item in cart %}
+        <div class="mini-cart-item">
+            <div>
+                <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem;">{{ item.name }}</div>
+                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.15rem;">
+                    Qty: <strong>{{ item.qty }}</strong> &times; ₹{{ item.price }}
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">₹{{ item.total }}</span>
+                <a href="{% url 'remove_from_cart' item.id %}" class="mini-delete-item-link" title="Delete item">🗑️</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="text-align: center; color: #94a3b8; padding-top: 5rem;">
+            <p style="font-size: 2.5rem;">🛒</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Your instamart basket is empty.</p>
+        </div>
+        {% endif %}
+    </div>
+    <div class="drawer-footer-checkout">
+        <div class="drawer-grand-total">
+            <span>Grand Total:</span>
+            <span style="color: #16a34a;">₹{{ cart_total|default:"0.00" }}</span>
+        </div>
+        <form method="POST" action="{% url 'create_bill' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="finalize_bill">
+
+            <div style="margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #344054;">Customer Name</label>
+                <input type="text" name="customer" required placeholder="Enter customer name..."
+                    style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; outline: none; background: #fff; font-size: 0.9rem;">
+            </div>
+
+            {% if not cart %}
+            <button type="submit" class="btn-fast-cart"
+                style="width: 100%; padding: 0.8rem 0; background: #181c24; opacity: 0.5; cursor: not-allowed;"
+                disabled>
+                ✅ Save & Finalize Invoice
+            </button>
+            {% else %}
+            <button type="submit" class="btn-fast-cart" style="width: 100%; padding: 0.8rem 0; background: #181c24;">
+                ✅ Save & Finalize Invoice
+            </button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div id="django-cart-trigger"
+    data-should-open="{% if messages %}{% for m in messages %}{% if 'added directly' in m.message or 'removed successfully' in m.message %}true{% endif %}{% endfor %}{% endif %}">
+</div>
+
 <script>
-    // Premium Real-Time Filtering Logic
+    // 1. Drawer UI Slide Open & Close Core Mechanics
+    const openBtn = document.getElementById('openCartDrawerBtn');
+    const closeBtn = document.getElementById('closeCartDrawerBtn');
+    const drawer = document.getElementById('cartSidebarDrawer');
+    const overlay = document.getElementById('drawerOverlay');
+
+    function openDrawer() { drawer.classList.add('active'); overlay.classList.add('active'); }
+    function closeDrawer() { drawer.classList.remove('active'); overlay.classList.remove('active'); }
+
+    openBtn.addEventListener('click', openDrawer);
+    closeBtn.addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', closeDrawer);
+
+    // FIXED: Auto-open drawer safely by parsing data variables from the bridge layer (0 linter errors)
+    const triggerBridge = document.getElementById('django-cart-trigger');
+    if (triggerBridge && triggerBridge.getAttribute('data-should-open') === 'true') {
+        openDrawer();
+    }
+
+    // 2. Real-Time Filtering Logic for Card Elements
     document.getElementById('inventorySearch').addEventListener('keyup', function () {
         let filter = this.value.toLowerCase();
-        let rows = document.querySelectorAll('#inventoryTable tbody tr');
-        rows.forEach(row => {
-            if (row.cells.length > 1) {
-                let text = row.innerText.toLowerCase();
-                row.style.display = text.includes(filter) ? '' : 'none';
-            }
+        let cards = document.querySelectorAll('#inventoryGrid .instamart-item-card');
+        cards.forEach(card => {
+            let searchContent = card.getAttribute('data-search-content');
+            card.style.display = searchContent.includes(filter) ? '' : 'none';
         });
     });
 </script>

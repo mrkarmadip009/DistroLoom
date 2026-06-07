@@ -1,8 +1,9 @@
+# inventory/models.py
 from django.db import models
 from django.core.exceptions import ValidationError
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     class Meta:
         verbose_name_plural = "Categories"
@@ -17,6 +18,11 @@ class Product(models.Model):
     buying_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     added_on = models.DateTimeField(auto_now_add=True)
+    
+    # NEW SWIGGY / BLINKIT Q-COMMERCE ASSETS
+    image = models.ImageField(upload_to='products/', null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True) # Instamart pe listing hide/show karne ke liye
 
     @property
     def profit_per_item(self):

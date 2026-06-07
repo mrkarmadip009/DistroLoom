@@ -1,19 +1,21 @@
-# DistroLoom/urls.py
+# DistroLoom/urls.py (Main Project Router)
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
-from django.contrib.auth import views as auth_views
-from inventory import views as inventory_views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
+    # Admin Panel Route
     path('admin/', admin.site.urls),
     
-    # 1. Redirects the base URL (http://127.0.0.1:8000/) directly to your login system
-    path('', RedirectView.as_view(url='inventory/login/'), name='root_redirect'),
+    # 1. Absolute Base Redirect to Login System smoothly
+    path('', RedirectView.as_view(url='/inventory/login/'), name='root_redirect'),
     
-    # 2. App URLs (This routes everything neatly through your inventory app)
+    # 2. Main Core Application Link
     path('inventory/', include('inventory.urls')),
-    
-    # 3. Dedicated registration path linking directly to your view
-    path('register/', inventory_views.register, name='register'),
 ]
+
+# 3. MAGIC COUPLING LAYER: Uploaded Photos (Swiggy UI Assets) ko browser me server karne ke liye
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

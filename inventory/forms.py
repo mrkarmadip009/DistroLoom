@@ -1,7 +1,9 @@
+# inventory/forms.py
 from django import forms
-from .models import Product
+from .models import Product, Category
 
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'category', 'stock_quantity', 'buying_price', 'selling_price']
+        # Hamne fields list me 'description', 'image' aur 'is_active' ko jod diya hai
+        fields = ['name', 'category', 'description', 'image', 'stock_quantity', 'buying_price', 'selling_price', 'is_active']

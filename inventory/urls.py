@@ -1,3 +1,4 @@
+# inventory/urls.py
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
@@ -11,9 +12,14 @@ urlpatterns = [
     path('sales/', views.sales_history, name='sales_history'),
     path('reports/finance/', views.financial_report, name='financial_report'),
     path('unlock-profit/', views.unlock_session, name='unlock_session'),
-    # Naya path category ke andar ke items dekhne ke liye
     path('category/<int:category_id>/products/', views.category_products, name='category_products'),
-    # Corrected Template Directories reflecting your registration folder structure
+    
+    # DYNAMIC Q-COMMERCE FAST MODIFIERS & DRAWER LAYER ENDPOINTS
+    path('store/', views.storefront_view, name='storefront_view'),
+    path('store/add-fast/<int:product_id>/', views.add_to_cart_fast, name='add_to_cart_fast'),
+    path('store/remove-item/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+    
+    # Authentication Framework Management Layer
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', views.custom_logout, name='logout'),
     path('register/', views.register, name='register'),

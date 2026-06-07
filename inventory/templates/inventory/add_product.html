@@ -20,12 +20,11 @@
         font-weight: 800;
         color: #181c24;
         letter-spacing: -0.01em;
-        margin-bottom: 0.25rem;
     }
 
-    /* Premium Clean Frame Styles */
+    /* PREMIUM CLEAN FRAME STYLES FOR SEARCH DROPDOWN */
     .search-pill-box {
-        padding: 2rem;
+        padding: 1.5rem;
         margin-bottom: 1.75rem;
         border: 1px dashed #5b4cdb50;
         border-radius: 1.25rem;
@@ -38,7 +37,7 @@
         border: 1px solid rgba(220, 222, 230, 0.6);
         border-radius: 1.25rem;
         background: #fff;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     }
 
     .field-title {
@@ -47,12 +46,10 @@
         margin-bottom: 1.75rem;
         color: #181c24;
         font-weight: 700;
-        letter-spacing: 0.05em;
         border-bottom: 1px solid #f1f5f9;
         padding-bottom: 0.5rem;
     }
 
-    /* PREMIUM REPAIRED INPUT FIELDS & LABELS CSS */
     .form-card-box p {
         margin-bottom: 1.5rem;
         display: flex;
@@ -74,19 +71,16 @@
         background: #f8fafc;
         font-size: 0.95rem;
         font-family: inherit;
-        color: #181c24;
         outline: none;
-        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.2s;
     }
 
     .premium-control:focus {
         background: #ffffff;
         border-color: #5b4cdb;
-        box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.12), 0 1px 2px rgba(16, 24, 40, 0.05);
+        box-shadow: 0 0 0 4px rgba(91, 76, 219, 0.12);
     }
 
-    /* Core Actions Component */
     .btn-submit-inventory {
         width: 100%;
         padding: 0.9rem;
@@ -97,8 +91,6 @@
         font-weight: 600;
         font-size: 1rem;
         cursor: pointer;
-        box-shadow: 0 2px 5px rgba(91, 76, 219, 0.2);
-        transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -109,59 +101,49 @@
     .btn-submit-inventory:hover {
         background: #4a3bc4;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(91, 76, 219, 0.35);
     }
 
-    .back-wrapper {
-        text-align: center;
-        margin-top: 1.75rem;
-    }
-
-    .back-link-custom {
-        color: #667085;
-        font-size: 0.875rem;
-        font-weight: 500;
-        text-decoration: none;
-        transition: color 0.2s ease;
-    }
-
-    .back-link-custom:hover {
-        color: #181c24;
+    /* Subtle asset notice style */
+    .media-notice {
+        font-size: 0.75rem;
+        color: #ff6b6b;
+        font-weight: 600;
+        margin-top: 0.25rem;
     }
 </style>
 
 <div class="form-container-box">
     <div class="section-banner">
-        <div class="icon-box" style="font-size: 2.25rem; margin-bottom: 0.75rem;">➕</div>
-        <h2>Add / Update Stock</h2>
-        <p style="color: #667085; font-size: 0.9rem;">Create new items or update existing inventory</p>
+        <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🚀</div>
+        <h2>Instamart Store Catalog</h2>
+        <p style="color: #667085; font-size: 0.9rem;">Add items with high-quality media assets for storefront</p>
     </div>
 
     <div class="search-pill-box">
         <h3
-            style="font-size: 0.85rem; text-transform: uppercase; color: #5b4cdb; margin-bottom: 1rem; font-weight: 700; letter-spacing: 0.02em;">
-            Search Existing Products
+            style="font-size: 0.85rem; text-transform: uppercase; color: #5b4cdb; margin-bottom: 0.75rem; font-weight: 700; letter-spacing: 0.02em;">
+            Search Existing Products to Restock
         </h3>
         <select id="product-selector" class="premium-control"
             style="border: 1px solid rgba(91, 76, 219, 0.25); background-color: #fff;">
             <option value="">-- Start Typing to Find Product --</option>
             {% for product in products %}
             <option value="{{ product.id }}" data-name="{{ product.name }}" data-category="{{ product.category.id }}"
-                data-stock="{{ product.stock_quantity }}" data-buying="{{ product.buying_price }}"
+                data-desc="{{ product.description|default_if_none:'' }}" data-buying="{{ product.buying_price }}"
                 data-selling="{{ product.selling_price }}">
-                {{ product.name }} ({{ product.stock_quantity }})
+                {{ product.name }} (Available: {{ product.stock_quantity }})
             </option>
             {% endfor %}
         </select>
     </div>
 
-    <form method="POST" action="{% url 'add_product' %}" class="form-card-box">
+    <form method="POST" action="{% url 'add_product' %}" enctype="multipart/form-data" class="form-card-box">
         {% csrf_token %}
-        <h3 class="field-title">Product Details</h3>
+        <h3 class="field-title">Product Assets & Details</h3>
 
         <p>
-            <label for="id_name">Name</label>
-            <input type="text" name="name" required id="id_name" placeholder="Enter product name..."
+            <label for="id_name">Item Name</label>
+            <input type="text" name="name" required id="id_name" placeholder="e.g., Coca Cola Bottle, Dairy Milk"
                 class="premium-control">
         </p>
 
@@ -176,31 +158,39 @@
         </p>
 
         <p>
-            <label for="id_stock_quantity">Stock Quantity</label>
+            <label for="id_description">Product Description</label>
+            <textarea name="description" id="id_description" rows="2"
+                placeholder="e.g., Chilled 250ml refreshing drink..." class="premium-control"
+                style="resize: none;"></textarea>
+        </p>
+
+        <p>
+            <label for="id_image">Product Display Photo (Swiggy UI Asset)</label>
+            <input type="file" name="image" id="id_image" accept="image/*" class="premium-control"
+                style="padding: 0.6rem;">
+            <span class="media-notice" id="image-status-notice">Note: Leave blank to retain previous image if
+                updating.</span>
+        </p>
+
+        <p>
+            <label for="id_stock_quantity">New Stock Quantity to Add</label>
             <input type="number" name="stock_quantity" value="0" required id="id_stock_quantity"
                 class="premium-control">
         </p>
 
         <p>
             <label for="id_buying_price">Buying Price (₹)</label>
-            <input type="number" name="buying_price" step="0.01" required id="id_buying_price" placeholder="0.00"
-                class="premium-control">
+            <input type="number" name="buying_price" step="0.01" required id="id_buying_price" class="premium-control">
         </p>
 
         <p>
-            <label for="id_selling_price">Selling Price (₹)</label>
-            <input type="number" name="selling_price" step="0.01" required id="id_selling_price" placeholder="0.00"
+            <label for="id_selling_price">Selling Price / Listing Price (₹)</label>
+            <input type="number" name="selling_price" step="0.01" required id="id_selling_price"
                 class="premium-control">
         </p>
 
-        <button type="submit" class="btn-submit-inventory">🚀 Save to Inventory</button>
+        <button type="submit" class="btn-submit-inventory">🛒 Push to Swiggy Catalog</button>
     </form>
-
-    <div class="back-wrapper">
-        <a href="{% url 'inventory_list' %}" class="back-link-custom">
-            ← Back to Dashboard
-        </a>
-    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -209,14 +199,23 @@
         $('#product-selector').change(function () {
             var selected = $(this).find('option:selected');
             if (selected.val()) {
+                // Instantly auto fill form elements from contextual attributes
                 $('#id_name').val(selected.data('name'));
                 $('#id_category').val(selected.data('category'));
-                $('#id_stock_quantity').val(selected.data('stock')).focus();
+                $('#id_description').val(selected.data('desc'));
                 $('#id_buying_price').val(selected.data('buying'));
                 $('#id_selling_price').val(selected.data('selling'));
+
+                // Alert notification setup on active asset management
+                $('#image-status-notice').text("⚠️ Product already has an image. Uploading a new one will replace it.");
+
+                // Focus on quantity field to increment instantly and keep workflow rapid
+                $('#id_stock_quantity').val('0').focus();
             } else {
-                $('#id_name, #id_category, #id_buying_price, #id_selling_price').val('');
+                // Reset configurations if empty drop choice is made
+                $('#id_name, #id_category, #id_description, #id_buying_price, #id_selling_price').val('');
                 $('#id_stock_quantity').val('0');
+                $('#image-status-notice').text("Note: Leave blank to retain previous image if updating.");
             }
         });
     });
