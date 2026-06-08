@@ -31,31 +31,38 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name} ({self.stock_quantity} in stock)"
 
+# inventory/models.py ke andar sirf Sale model ko isse replace karo:
+from django.contrib.auth.models import User
+
+# inventory/models.py ke andar Sale model ko isse replace karo:
+from django.contrib.auth.models import User
+
 class Sale(models.Model):
     customer_name = models.CharField(max_length=200)
     sale_date = models.DateTimeField(auto_now_add=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # NEW FLAG: True tab hoga jab normal user ise apni screen se delete marega
+    deleted_by_user = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Bill for {self.customer_name} - {self.sale_date.date()}"
 
+# inventory/models.py ke andar SaleItem model ko isse completely replace karo:
+
 class SaleItem(models.Model):
-    sale = models.ForeignKey(Sale, related_name='items', on_delete=models.CASCADE)
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
+    quantity = models.IntegerField()
     price_at_sale = models.DecimalField(max_digits=10, decimal_places=2)
 
+    def __str__(self):
+        return f"{self.quantity}x {self.product.name} inside Bill #{self.sale.id}"
+
     def save(self, *args, **kwargs):
-        # 1. Validation: Ensure we don't sell more than we have
-        if self.product.stock_quantity < self.quantity:
-            raise ValidationError(
-                f"Not enough stock for {self.product.name}. "
-                f"Available: {self.product.stock_quantity}, Requested: {self.quantity}"
-            )
-
-        # 2. Stock Reduction: Only subtract from stock when first created
-        if not self.pk:
-            self.product.stock_quantity -= self.quantity
-            self.product.save()
-
+        """
+        FIXED: Removed the duplicate stock_quantity check from here!
+        We handle all limits in views.py, so this model just saves records cleanly.
+        """
         super().save(*args, **kwargs)

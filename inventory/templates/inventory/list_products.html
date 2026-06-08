@@ -425,15 +425,24 @@
                 <p class="card-item-desc">{% if product.description %}{{ product.description }}{% else %}No description
                     configured.{% endif %}</p>
 
-                <div class="card-meta-row">
-                    <span class="card-price-label">₹{{ product.selling_price }}</span>
-                    {% if product.stock_quantity < 10 %} <span class="stock-pill stock-pill-low">Qty: {{
-                        product.stock_quantity }} ⚠️ Low</span>
+                <div class="card-meta-row"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-top: 0.75rem; border-top: 1px dashed #f1f5f9; width: 100%;">
+
+                    <span class="card-price-label" style="font-size: 1.15rem; font-weight: 800; color: #0f172a;">
+                        ₹{{ product.selling_price }}
+                    </span>
+
+                    {% if product.stock_quantity < 10 %} <span class="stock-pill"
+                        style="font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.55rem; border-radius: 2rem; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; white-space: nowrap;">
+                        Qty: {{ product.stock_quantity }} ⚠️ Low
+                        </span>
                         {% else %}
-                        <span class="stock-pill stock-pill-normal">Qty: {{ product.stock_quantity }}</span>
+                        <span class="stock-pill"
+                            style="font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.55rem; border-radius: 2rem; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; white-space: nowrap;">
+                            Qty: {{ product.stock_quantity }}
+                        </span>
                         {% endif %}
                 </div>
-
                 <div class="fast-action-wrapper">
                     {% if product.stock_quantity > 0 %}
                     <form method="POST" action="{% url 'add_to_cart_fast' product.id %}" class="qty-input-row">
@@ -499,9 +508,9 @@
             <input type="hidden" name="action" value="finalize_bill">
 
             <div style="margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: #344054;">Customer Name</label>
-                <input type="text" name="customer" required placeholder="Enter customer name..."
-                    style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; outline: none; background: #fff; font-size: 0.9rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #344054;">Biller / Staff Username</label>
+                <input type="text" name="customer" value="{{ user.username }}" readonly required
+                    style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; outline: none; background: #f1f5f9; color: #64748b; font-weight: 600; font-size: 0.9rem; cursor: not-allowed;">
             </div>
 
             {% if not cart %}

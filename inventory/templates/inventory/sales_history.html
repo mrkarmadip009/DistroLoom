@@ -38,7 +38,7 @@
                 </td>
                 <td style="text-align:right; font-weight:700; color:#22863a;">₹{{ sale.total_amount }}</td>
 
-                <td class="no-print" style="text-align:center; min-width: 150px;">
+                <td class="no-print" style="text-align:center; min-width: 180px;">
                     <div style="display: flex; gap: 15px; justify-content: center; align-items: center;">
 
                         <button class="pdf-download-btn hover-lift"
@@ -46,13 +46,19 @@
                             <span>📄</span> PDF
                         </button>
 
-                        {% if user.is_superuser %}
-                        <a href="{% url 'delete_sale' sale.pk %}"
-                            onclick="return confirm('Karmadip, are you sure you want to delete this bill?')"
-                            class="delete-icon-link hover-lift" title="Delete Record">
+                        {% if user.is_superuser or sale.user == user or sale.customer_name == user.username %}
+                        <a href="{% url 'delete_sale' sale.id %}"
+                            onclick="return confirm('Bhai Karmadip, kya aap sach mein yeh bill apni history se hatana chahte hain?')"
+                            class="delete-icon-link hover-lift" title="Delete Record"
+                            style="color: #ef4444; background: #fef2f2; padding: 6px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #fee2e2;">
                             🗑️
                         </a>
                         {% endif %}
+                    </div>
+
+                    <div class="no-print"
+                        style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.35rem; font-weight: 500;">
+                        Operator: {{ sale.user.username|default:sale.customer_name }}
                     </div>
                 </td>
             </tr>
@@ -152,14 +158,11 @@
     .hover-lift {
         transition: transform 0.2s ease, box-shadow 0.2s ease !important;
         display: inline-block;
-        /* Required for transform to work on links */
     }
 
     .hover-lift:hover {
         transform: translateY(-3px) !important;
-        /* This moves the icon UP */
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        /* Adds a soft shadow */
     }
 
     /* Table & Chips */
@@ -178,6 +181,7 @@
     td {
         padding: 12px;
         border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
     }
 
     .product-chip {
@@ -206,7 +210,7 @@
 
     .nav-btn {
         padding: 10px 20px;
-        background: #007bff;
+        background: #5b4cdb;
         color: white;
         text-decoration: none;
         border-radius: 8px;
@@ -214,8 +218,17 @@
         border: none;
     }
 
+    .nav-btn:hover {
+        opacity: 0.9;
+        box-shadow: 0 4px 12px rgba(91, 76, 219, 0.2);
+    }
+
     .print-btn {
         background: #22863a !important;
+    }
+
+    .print-btn:hover {
+        box-shadow: 0 4px 12px rgba(34, 134, 58, 0.2) !important;
     }
 
     .delete-icon-link {
@@ -223,6 +236,12 @@
         font-size: 1.2rem;
         padding: 5px;
         border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .delete-icon-link:hover {
+        background: #fee2e2 !important;
+        transform: scale(1.08);
     }
 
     @media print {

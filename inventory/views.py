@@ -15,15 +15,26 @@ from .forms import ProductForm
 # 1. DASHBOARD / INVENTORY LIST
 # inventory/views.py ke andar inventory_list function ko isse replace karo:
 
+# inventory/views.py ke andar inventory_list function ko isse replace karo:
+
 @login_required
 def inventory_list(request):
-    """Main Inventory Dashboard displaying products, processing interactive real-time sidebar carts."""
+    """Main Inventory Dashboard displaying products with unified list/dict cart compatibility."""
     products = Product.objects.all()
     low_stock = Product.objects.filter(stock_quantity__lt=10)
     
-    # 1. RETRIEVE ONGOING CART SESSIONS FOR SIDEBAR DRAWER LAYOUT
-    cart = request.session.get('cart', [])
-    cart_total = sum(float(item['total']) for item in cart)
+    # 1. RETRIEVE ONGOING CART SESSIONS SAFE LAYER
+    cart_session = request.session.get('cart', {})
+    
+    # FIXED: Normalize data to always fallback as an iterable list structure cleanly
+    cart_list = []
+    if isinstance(cart_session, dict):
+        cart_list = list(cart_session.values())
+    elif isinstance(cart_session, list):
+        cart_list = cart_session
+
+    # 2. FIXED CRASHING GENEXPR: Loop through the normalized cart list safely
+    cart_total = sum(float(item['total']) for item in cart_list if isinstance(item, dict) and 'total' in item)
     
     # Calculate Total Business Stats
     total_inventory_value = products.aggregate(
@@ -40,7 +51,7 @@ def inventory_list(request):
             profit = (item.price_at_sale - item.product.buying_price) * item.quantity
             total_profit += profit
 
-    # 2. INJECT 'cart' and 'cart_total' INSIDE CONTEXT LAYER
+    # Inject variables inside the context layout layer
     context = {
         'products': products,
         'low_stock': low_stock,
@@ -48,10 +59,11 @@ def inventory_list(request):
         'total_revenue': total_sales_revenue,
         'total_profit': total_profit,
         'total_items': products.count(),
-        'cart': cart,              # Pass cart session list to template drawer
-        'cart_total': cart_total,  # Pass sum total for pricing labels
+        'cart': cart_list,          # Pass standardized list format to sidebar templates
+        'cart_total': cart_total,   # Pass safe accumulated price labels
     }
     return render(request, 'inventory/list_products.html', context)
+
 # 2. DYNAMIC REGISTRATION SYSTEM
 def register(request):
     if request.method == 'POST':
@@ -96,6 +108,10 @@ def financial_report(request):
 # 5. UPGRADED ADD PRODUCT (With Media and Description Dynamic Overwrites)
 @login_required
 def add_product(request):
+    # BACKEND GUARD: Agar user admin nahi hai, toh use chupchaap dashboard par bhej do!
+    if not request.user.is_superuser:
+        messages.error(request, "⚠️ Access Denied: Only admins can manage stock configurations!")
+        return redirect('inventory_list')
     products = Product.objects.all().order_by('name')
 
     if request.method == "POST":
@@ -143,24 +159,37 @@ def add_product(request):
     })
 
 # 6. DYNAMIC CREATION BILLING ENGINE WITH IN-CART OFFSET COUNTERS
+# inventory/views.py ke andar purana create_bill isse badlo:
+# inventory/views.py ke andar create_bill function ko isse replace karo:
+
 @login_required
 def create_bill(request):
+    """
+    Handles synchronized fallback billing architecture supporting both dictionary
+    and list session cart structures cleanly without double-deducting database stock.
+    """
     raw_products = Product.objects.all().order_by('name')
-    cart = request.session.get('cart', [])
+    cart_session = request.session.get('cart', {})
     
+    # Normalize cart data to handle both list and dictionary fallback storage seamlessly
+    cart_list = []
+    if isinstance(cart_session, dict):
+        cart_list = list(cart_session.values())
+    elif isinstance(cart_session, list):
+        cart_list = cart_session
+
     products = []
     for prod in raw_products:
         cart_qty = 0
-        for item in cart:
-            if item['id'] == prod.id:
-                cart_qty = item['qty']
+        for item in cart_list:
+            if int(item['id']) == prod.id:
+                cart_qty = int(item['qty'])
                 break
-        
         products.append({
             'id': prod.id,
             'name': prod.name,
             'selling_price': prod.selling_price,
-            'stock_quantity': prod.stock_quantity - cart_qty 
+            'stock_quantity': prod.stock_quantity  # Database is already deducted in real-time!
         })
 
     if request.method == "POST":
@@ -169,78 +198,77 @@ def create_bill(request):
         if action == "add_to_cart":
             p_id = request.POST.get('product')
             qty = int(request.POST.get('quantity'))
-            prod = Product.objects.get(id=p_id)
+            prod = get_object_or_404(Product, id=p_id)
             
-            existing_cart_qty = 0
-            existing_item_index = -1
-            
-            for index, item in enumerate(cart):
-                if item['id'] == prod.id:
-                    existing_cart_qty = item['qty']
-                    existing_item_index = index
-                    break
-            
-            total_requested_qty = existing_cart_qty + qty
-            
-            if prod.stock_quantity >= total_requested_qty:
-                if existing_item_index != -1:
-                    cart[existing_item_index]['qty'] = total_requested_qty
-                    cart[existing_item_index]['total'] = float(prod.selling_price * total_requested_qty)
-                    messages.success(request, f"Updated '{prod.name}' quantity in cart to {total_requested_qty}.")
+            # Real-time Stock Lock: Deduct from DB instantly during standard form add
+            if prod.stock_quantity >= qty:
+                prod.stock_quantity -= qty
+                prod.save()
+
+                # Sync back to session storage dictionary architecture
+                if isinstance(cart_session, list):
+                    cart_session = {str(item['id']): item for item in cart_session}
+
+                str_id = str(prod.id)
+                if str_id in cart_session:
+                    cart_session[str_id]['qty'] += qty
+                    cart_session[str_id]['total'] = float(cart_session[str_id]['qty']) * float(prod.selling_price)
                 else:
-                    cart.append({
-                        'id': prod.id, 
-                        'name': prod.name, 
+                    cart_session[str_id] = {
+                        'id': prod.id,
+                        'name': prod.name,
                         'qty': qty,
-                        'price': float(prod.selling_price), 
+                        'price': float(prod.selling_price),
                         'total': float(prod.selling_price * qty)
-                    })
-                    messages.success(request, f"'{prod.name}' added to cart.")
-                
-                request.session['cart'] = cart
+                    }
+                request.session['cart'] = cart_session
             else:
-                available_left = prod.stock_quantity - existing_cart_qty
-                if existing_cart_qty > 0:
-                    messages.error(request, f"⚠️ Stock Limit Error: You already have {existing_cart_qty} of '{prod.name}' in cart. Max remaining you can add is {available_left}!")
-                else:
-                    messages.error(request, f"⚠️ Stock Limit Error: Only {prod.stock_quantity} items of '{prod.name}' available. You requested {qty}!")
-            
+                messages.error(request, f"⚠️ Not enough stock available for {prod.name}!")
             return redirect('create_bill')
 
         elif action == "finalize_bill":
             customer = request.POST.get('customer')
-            if not cart:
+            if not cart_list:
                 messages.warning(request, "Your cart is empty!")
-                return redirect('create_bill')
+                return redirect('inventory_list')
             
             try:
                 with transaction.atomic():
-                    new_sale = Sale.objects.create(customer_name=customer)
+                    # Link active logged-in user tracking to the finalized bill mapping
+                    new_sale = Sale.objects.create(customer_name=customer, user=request.user)
                     total = 0
-                    for item in cart:
-                        prod = Product.objects.get(id=item['id'])
+                    
+                    for item in cart_list:
+                        prod = Product.objects.get(id=int(item['id']))
+                        
+                        # CRITICAL SAFEGUARD FIXED: Only creating records. 
+                        # DB stock has already been deducted at cart insertion!
                         SaleItem.objects.create(
                             sale=new_sale, 
                             product=prod, 
-                            quantity=item['qty'], 
-                            price_at_sale=item['price']
+                            quantity=int(item['qty']), 
+                            price_at_sale=float(item['price'])
                         )
-                        total += item['total']
+                        total += float(item['total'])
+                    
                     new_sale.total_amount = total
                     new_sale.save()
                 
-                request.session['cart'] = []
+                # Flush the session cart cleanly upon successful generation
+                request.session['cart'] = {}
                 messages.success(request, f"Bill saved successfully for {customer}!")
-                return redirect('sales_history')
+                return redirect('inventory_list')
                 
-            except ValidationError as e:
-                messages.error(request, f"⚠️ Transaction Declined: {e.messages[0]}")
-                return redirect('create_bill')
+            except Exception as e:
+                messages.error(request, f"⚠️ Transaction Declined: {str(e)}")
+                return redirect('inventory_list')
 
+    # Compute grand calculations for template rendering metrics
+    cart_total = sum(float(i['total']) for i in cart_list)
     return render(request, 'inventory/create_bill.html', {
         'products': products, 
-        'cart': cart, 
-        'cart_total': sum(i['total'] for i in cart)
+        'cart': cart_list, 
+        'cart_total': cart_total
     })
 
 # 7. ADDITIONAL MANAGEMENT VIEWS
@@ -258,12 +286,23 @@ def add_category(request):
             return redirect('add_product')
     return render(request, 'inventory/add_category.html')
 
+
+# inventory/views.py ke andar purana sales_history isse badlo:
+# inventory/views.py ke andar purana sales_history badlo:
 @login_required
 def sales_history(request):
-    sales = Sale.objects.prefetch_related('items__product').all().order_by('-sale_date')
-    return render(request, 'inventory/sales_history.html', {'sales': sales})
-
-# 8. NATIVE COMPATIBLE DOWNLOAD MANAGER
+    """Filters history seamlessly - Admin sees everything, user sees only unarchived logs."""
+    if request.user.is_superuser:
+        # Admin Rules: Sab kuch dikhao, chahe user ne hide kiya ho ya nahi
+        sales = Sale.objects.prefetch_related('items__product').all().order_by('-sale_date')
+    else:
+        # Ordinary User Rules: Sirf uske banaye hue bills, aur jo usne delete (hide) NA kiye hon
+        sales = Sale.objects.prefetch_related('items__product').filter(
+            user=request.user, 
+            deleted_by_user=False
+        ).order_by('-sale_date')
+        
+    return render(request, 'inventory/sales_history.html', {'sales': sales})# 8. NATIVE COMPATIBLE DOWNLOAD MANAGER
 @login_required
 def download_bill(request, sale_id):
     sale = get_object_or_404(Sale, id=sale_id)
@@ -310,25 +349,67 @@ def delete_category(request, pk):
     category.delete()
     return redirect('category_list')
 
-@login_required
-def delete_sale(request, pk):
-    if not request.user.is_superuser:
-        return redirect('sales_history')
-    sale = get_object_or_404(Sale, pk=pk)
-    sale.delete()
-    return redirect('sales_history')
+# inventory/views.py ke andar purana delete_sale badlo:
+# inventory/views.py ke andar delete_sale function ke starting ko aise update karo:
 
+# inventory/views.py ke andar delete_sale function ko badal kar aisa kar do:
+
+# inventory/views.py ke bottom mein delete_sale function ko isse replace karo:
+
+@login_required
+def delete_sale(request, sale_id=None, pk=None):
+    """
+    Handles both permanent Admin purging and User soft-deleting WITHOUT restoring product stock.
+    Once a bill is finalized, the stock is gone forever from the physical shop!
+    """
+    # 1. Resolve active routing parameter keys
+    target_id = sale_id or pk or request.GET.get('sale_id')
+    sale = get_object_or_404(Sale, id=target_id)
+
+    # Security Guard Validation Layer
+    if not request.user.is_superuser and sale.user != request.user:
+        messages.error(request, "⚠️ Access Denied: Unauthorized operation tracking parameters!")
+        return redirect('sales_history')
+
+    if request.user.is_superuser:
+        # ADMIN ACTION: Permanent DB purge configuration
+        try:
+            with transaction.atomic():
+                # FIXED: Loop that restored the stock back to inventory has been REMOVED!
+                # We just delete the main sale record. Cascade delete will handle SaleItems cleanly.
+                sale.delete()
+                messages.success(request, "🗑️ [ADMIN] Bill permanently wiped from records. Inventory stock remains unaffected!")
+        except Exception as e:
+            messages.error(request, f"❌ Transaction broken execution: {str(e)}")
+    else:
+        # USER ACTION: Clean Soft Delete logic routing architecture (Hides from user screen only)
+        sale.deleted_by_user = True
+        sale.save()
+        messages.success(request, "🗑️ Bill removed successfully from your active history terminal.")
+
+    return redirect('sales_history')
 # 11. CATEGORY FILTER VIEW
+# inventory/views.py ke andar category_products function ko replace karo:
+
 @login_required
 def category_products(request, category_id):
+    """Filter records strictly inside a chosen category and display in Q-Commerce Grid format."""
     category = get_object_or_404(Category, id=category_id)
-    products = Product.objects.filter(category=category).order_by('name')
+    
+    # Fetch only active products belonging to this category
+    products = Product.objects.filter(category=category, is_active=True).order_by('name')
+    
+    # Retrieve cart session data to keep the sidebar sync working perfectly here too!
+    cart = request.session.get('cart', [])
+    cart_total = sum(float(item['total']) for item in cart)
+    
     context = {
         'category': category,
         'products': products,
+        'cart': cart,
+        'cart_total': cart_total,
     }
     return render(request, 'inventory/category_products.html', context)
-
 # 12. NEW CUSTOMER-FACING INTERACTIVE STOREFRONT VIEW
 @login_required
 def storefront_view(request):
@@ -341,60 +422,75 @@ def storefront_view(request):
     # inventory/views.py ke bilkul bottom par paste karo:
 # inventory/views.py ke andar add_to_cart_fast ko replace karo aur remove_from_cart ko uske neeche jod do:
 
+# inventory/views.py me in dono functions ko overwrite karein:
+
 @login_required
 def add_to_cart_fast(request, product_id):
-    """Dynamic bulk and retail quantity collector updating active session dictionary vectors."""
-    prod = get_object_or_404(Product, id=product_id)
-    cart = request.session.get('cart', [])
-    
-    # Custom post data validation layer (Agar direct input se dynamic quantity aati h to use pakdo)
-    qty_to_add = int(request.POST.get('bulk_qty', 1))
-    if qty_to_add < 1:
-        qty_to_add = 1
-        
-    existing_cart_qty = 0
-    existing_item_index = -1
-    
-    for index, item in enumerate(cart):
-        if item['id'] == prod.id:
-            existing_cart_qty = item['qty']
-            existing_item_index = index
-            break
-            
-    total_requested_qty = existing_cart_qty + qty_to_add
-    
-    if prod.stock_quantity >= total_requested_qty:
-        if existing_item_index != -1:
-            cart[existing_item_index]['qty'] = total_requested_qty
-            cart[existing_item_index]['total'] = float(prod.selling_price * total_requested_qty)
+    """
+    Real-time Stock Reservation supporting maximum exact stock clearance boundary limits.
+    """
+    if request.method == "POST":
+        product = get_object_or_404(Product, id=product_id)
+        try:
+            qty_to_add = int(request.POST.get('bulk_qty', 1))
+        except ValueError:
+            qty_to_add = 1
+
+        # ALLOW GREATER THAN OR EQUAL TO: Supports full clearance (e.g., 20 out of 20)
+        if product.stock_quantity >= qty_to_add and qty_to_add > 0:
+            product.stock_quantity -= qty_to_add
+            product.save()
+
+            # Maintain active structural dictionary representation inside session context
+            cart = request.session.get('cart', {})
+            str_id = str(product_id)
+
+            if str_id in cart:
+                cart[str_id]['qty'] += qty_to_add
+                cart[str_id]['total'] = float(cart[str_id]['qty']) * float(cart[str_id]['price'])
+            else:
+                cart[str_id] = {
+                    'id': product.id,
+                    'name': product.name,
+                    'price': str(product.selling_price),
+                    'qty': qty_to_add,
+                    'total': float(qty_to_add) * float(product.selling_price)
+                }
+
+            request.session['cart'] = cart
+            messages.success(request, f"⚡ {product.name} added directly into your billing terminal!")
         else:
-            cart.append({
-                'id': prod.id,
-                'name': prod.name,
-                'qty': qty_to_add,
-                'price': float(prod.selling_price),
-                'total': float(prod.selling_price * qty_to_add)
-            })
-        request.session['cart'] = cart
-        messages.success(request, f"⚡ '{prod.name}' ({qty_to_add} Units) added directly into your billing layer!")
-    else:
-        available_left = prod.stock_quantity - existing_cart_qty
-        if existing_cart_qty > 0:
-            messages.error(request, f"⚠️ Stock Exhausted: You already have {existing_cart_qty} in cart. Max remaining you can add is {available_left}!")
-        else:
-            messages.error(request, f"⚠️ Stock Exhausted: Only {prod.stock_quantity} available. You requested {qty_to_add}!")
-            
-    # Redirect smoothly back to inventory interface panel
-    return redirect('inventory_list')
+            messages.error(request, f"⚠️ Cannot add quantity requested! Stock available: {product.stock_quantity}")
+
+    return redirect(request.META.get('HTTP_REFERER', 'inventory_list'))
 
 @login_required
 def remove_from_cart(request, product_id):
-    """Wipes out targeted item instances inside ongoing checkout session maps."""
-    cart = request.session.get('cart', [])
-    
-    # Re-filtering list excluding current matched item array parameters
-    updated_cart = [item for item in cart if item['id'] != product_id]
-    
-    request.session['cart'] = updated_cart
-    messages.warning(request, "🗑️ Item removed successfully from active billing bucket.")
-    return redirect('inventory_list')
+    """
+    Real-time Stock Restoration: Agar slidebar drawer se item delete (cancel) kiya,
+    toh dukan ka maal wapas plus (+) ho jana chahiye!
+    """
+    cart = request.session.get('cart', {})
+    str_id = str(product_id)
+
+    if str_id in cart:
+        # 1. Cart me jitni quantity thi use nikal lo
+        removed_qty = cart[str_id]['qty']
+        
+        # 2. Dukan ke original stock me wapas jod (restore) do
+        product = get_object_or_404(Product, id=product_id)
+        product.stock_quantity += removed_qty
+        product.save()
+
+        # 3. Cart se permanently delete karo
+        del cart[str_id]
+        request.session['cart'] = cart
+        messages.success(request, f"🗑️ Item removed successfully. Stock restored back to inventory!")
+
+    return redirect(request.META.get('HTTP_REFERER', 'inventory_list'))
+
+def delete_bill(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id)
+    # Galti yahan hai: Ye loop dukan me maal wapas bhar raha hai
+    bill.delete()
+    return redirect('sales_history')
