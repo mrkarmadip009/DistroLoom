@@ -1,5 +1,5 @@
 {% extends 'inventory/base.html' %}
-
+{% load static %}
 {% block title %}DistroLoom | Current Inventory{% endblock %}
 
 {% block content %}
@@ -399,6 +399,13 @@
         <span class="search-icon">🔍</span>
         <input type="text" id="inventorySearch" placeholder="Search product name or category...">
     </div>
+
+
+
+
+
+
+
 
     <div class="inventory-grid-system" id="inventoryGrid">
         {% for product in products %}

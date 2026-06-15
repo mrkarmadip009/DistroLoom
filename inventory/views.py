@@ -391,25 +391,37 @@ def delete_sale(request, sale_id=None, pk=None):
 # 11. CATEGORY FILTER VIEW
 # inventory/views.py ke andar category_products function ko replace karo:
 
+# inventory/views.py ke andar category_products function ko isse completely replace karo:
+
 @login_required
 def category_products(request, category_id):
-    """Filter records strictly inside a chosen category and display in Q-Commerce Grid format."""
+    """
+    Safely renders targeted category shelf products with full structural check 
+    supporting both dictionary and list format cart sessions without crashing.
+    """
     category = get_object_or_404(Category, id=category_id)
+    products = Product.objects.filter(category=category).order_by('name')
     
-    # Fetch only active products belonging to this category
-    products = Product.objects.filter(category=category, is_active=True).order_by('name')
+    # 1. RETRIEVE AND NORMALIZE CART SESSIONS
+    cart_session = request.session.get('cart', {})
     
-    # Retrieve cart session data to keep the sidebar sync working perfectly here too!
-    cart = request.session.get('cart', [])
-    cart_total = sum(float(item['total']) for item in cart)
-    
+    cart_list = []
+    if isinstance(cart_session, dict):
+        cart_list = list(cart_session.values())
+    elif isinstance(cart_session, list):
+        cart_list = cart_session
+
+    # 2. FIXED CRASHING LOOP (LINE 404): Safe iterative genexpr calculation
+    cart_total = sum(float(item['total']) for item in cart_list if isinstance(item, dict) and 'total' in item)
+
     context = {
         'category': category,
         'products': products,
-        'cart': cart,
-        'cart_total': cart_total,
+        'cart': cart_list,          # Pass normalized list to template loops
+        'cart_total': cart_total,   # Pass computed float total sums
     }
     return render(request, 'inventory/category_products.html', context)
+
 # 12. NEW CUSTOMER-FACING INTERACTIVE STOREFRONT VIEW
 @login_required
 def storefront_view(request):
